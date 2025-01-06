@@ -1,8 +1,8 @@
 import pygame
 class Button():
     def __init__(self, image, pos, hov_image):
-        self.image=pygame.image.load(image).convert_alpha()
-        self.hov_image=hov_image
+        self.image=pygame.image.load(image)
+        self.hov_image=pygame.image.load(hov_image)
         self.x=pos[0]
         self.y=pos[1]
         self.rect=self.image.get_rect(center=(self.x, self.y))

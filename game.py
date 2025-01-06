@@ -23,14 +23,13 @@ def main_menu():
 
     ##buttons##
 
-    sign_in_button=Button('sign_in_button.png',(540,200),'hover_sign_in_button.png')
-
     while True:
         SCREEN.blit(BG,(0,0))
 
         SCREEN.blit(title_surface, (0, 0))
         SCREEN.blit(title_text, title_text_rect)
 
+        sign_in_button=Button('sign_in_button.png',(540,200),'hover_sign_in_button.png')
         mouse_pos=pygame.mouse.get_pos()
         sign_in_button.change_image(mouse_pos)
         sign_in_button.update(SCREEN)

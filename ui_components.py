@@ -1,8 +1,9 @@
 import pygame
 class Button():
     def __init__(self, image, pos, hov_image):
-        self.image=pygame.image.load(image)
+        self.base_image=pygame.image.load(image)
         self.hov_image=pygame.image.load(hov_image)
+        self.image=self.base_image
         self.x=pos[0]
         self.y=pos[1]
         self.rect=self.image.get_rect(center=(self.x, self.y))
@@ -20,7 +21,7 @@ class Button():
         if mouse_position[0] in range(self.rect.left, self.rect.right) and mouse_position[1] in range(self.rect.top, self.rect.bottom):
             self.image=self.hov_image
         else:
-            self.image=self.image
+            self.image=self.base_image
 
 class Textbox():
     def __init__(self, width, height, pos, font, text_colour, active_colour, inactive_colour, placeholder_text):

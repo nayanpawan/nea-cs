@@ -24,29 +24,28 @@ class Button():
             self.image=self.base_image
 
 class Textbox():
-    def __init__(self, width, height, pos, font, text_colour, active_colour, inactive_colour, placeholder_text):
-        self.rect= pygame.Rect(pos, width, height)
+    def __init__(self, width, height, pos, placeholder_text):
         self.x=pos[0]
         self.y=pos[1]
-        self.font=pygame.font.Font(font,22)
-        self.text_colour=text_colour
-        self.active_colour=active_colour
-        self.inactive_colour=inactive_colour
+        self.rect= pygame.Rect(self.x, self.y, width, height)
+        self.font=pygame.font.SysFont('Arial',22)
+        self.text_colour=(0,0,0)
+        self.active_colour=(135, 206, 235)
+        self.inactive_colour=(128, 128, 128)
         self.colour=self.inactive_colour
         self.active=False
         self.placeholder_text=placeholder_text
         self.text=''
         self.show_placeholder=True
+        self.placeholder_colour=(192, 192, 192)
 
     def draw(self, screen):
-        if self.show_placeholder:
+        if self.text=='':
             display_text= self.placeholder_text
+            text_surface=self.font.render(display_text, True, self.placeholder_colour)
         else:
             display_text=self.text
-        if not self.show_placeholder:
             text_surface=self.font.render(display_text, True, self.text_colour)
-        else:
-            text_surface=self.font.render(display_text, True, self.colour)
         pygame.draw.rect(screen, self.colour, self.rect, 2)  
         screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5))  
 
@@ -55,18 +54,24 @@ class Textbox():
             if self.rect.collidepoint(event.pos):
                 self.active=True
                 self.show_placeholder=False
+                pygame.key.set_repeat(500,200)
             else:
                 self.active=False
+                pygame.key.set_repeat()
             if self.active:
                 self.colour=self.active_colour
             else:
                 self.colour=self.inactive_colour
 
         if event.type==pygame.KEYDOWN and self.active:
-            if event.key==pygame.K_BACKSPACE:
+            if (event.key==pygame.K_BACKSPACE) and self.text:
                 self.text=self.text[:-1]
             else:
                 self.text+= event.unicode    
+        
 
     def get_text(self):
-        return self.text            
+        input=self.text
+        self.text=self.placeholder_text
+        return input
+        

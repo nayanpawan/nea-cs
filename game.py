@@ -1,5 +1,8 @@
 import pygame
 import sys
+from perlin_noise import PerlinNoise
+import random
+
 
 pygame.init()
 
@@ -7,6 +10,12 @@ from ui_components import Button, Textbox
 
 WIDTH, HEIGHT= 1080, 600
 SCREEN=pygame.display.set_mode((WIDTH, HEIGHT))
+
+FPS=60
+clock=pygame.time.Clock()
+
+GRID_SIZE = 25
+CELL_SIZE = WIDTH // GRID_SIZE
 
 def main_menu():
     pygame.display.set_caption('Main menu')
@@ -82,8 +91,8 @@ def sign_in_menu():
         submit_button.update(SCREEN)
 
         for event in pygame.event.get():
-            username_input.handle_text(event, keys)
-            password_input.handle_text(event,keys)
+            username_input.handle_text(event)
+            password_input.handle_text(event)
             if event.type==pygame.QUIT:
                 pygame.quit()
                 sys.exit()  
@@ -134,8 +143,8 @@ def register_menu():
         submit_button.update(SCREEN)
 
         for event in pygame.event.get():
-            username_input.handle_text(event, keys)
-            password_input.handle_text(event,keys)
+            username_input.handle_text(event)
+            password_input.handle_text(event)
             if event.type==pygame.QUIT:
                 pygame.quit()
                 sys.exit()  
@@ -145,6 +154,51 @@ def register_menu():
                     password=password_input.get_text()
                     print(username)
                     print(password)      
-        pygame.display.update()           
+        pygame.display.update()         
 
-main_menu()        
+def game():
+    def generate_dungeon():
+        seed=random.randint(0,10000)
+        noise=PerlinNoise(10,seed)
+        dungeon=[]
+        for y in range (GRID_SIZE):
+            row=[]
+            for x in range (GRID_SIZE):
+                tile=noise((x/GRID_SIZE, y/GRID_SIZE))
+                if tile>-0.05:
+                    row.append(0)
+                else:
+                    row.append(1)    
+            dungeon.append(row) 
+
+            
+
+        return dungeon    
+
+    def draw_dungeon(dungeon):
+        for y, row in enumerate(dungeon):
+            for x, cell in enumerate(row):
+                color = (128,128,128) if cell == 1 else (0,0,0)
+                rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                pygame.draw.rect(SCREEN, color, rect)     
+
+    dungeon=generate_dungeon()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        # Draw the dungeon
+        SCREEN.fill((0, 0, 0))  # Clear the screen
+        draw_dungeon(dungeon)
+
+        pygame.display.flip()  # Update the display
+        clock.tick(FPS)
+
+    pygame.quit()
+    sys.exit()            
+
+
+#main_menu()
+game()        

@@ -58,6 +58,7 @@ class Textbox():
             else:
                 self.active=False
                 pygame.key.set_repeat()
+
             if self.active:
                 self.colour=self.active_colour
             else:
@@ -66,8 +67,8 @@ class Textbox():
         if event.type==pygame.KEYDOWN and self.active:
             if (event.key==pygame.K_BACKSPACE) and self.text:
                 self.text=self.text[:-1]
-            else:
-                self.text+= event.unicode    
+            elif not (event.key==pygame.K_BACKSPACE) and self.text:
+                self.text+= event.unicode       
         
 
     def get_text(self):

@@ -20,17 +20,17 @@ clock=pygame.time.Clock()
 
 def main_menu():
     pygame.display.set_caption('Main menu')
-    BG=pygame.image.load("main-menu-bg.png").convert_alpha()
+    BG=pygame.image.load("bgs/main-menu-bg.png").convert_alpha()
     BG = pygame.transform.scale(BG, (WIDTH, HEIGHT))
 
     ##title##
-    title=pygame.image.load('main-title.png').convert_alpha()
+    title=pygame.image.load('titles/main-title.png').convert_alpha()
     title_rect=title.get_rect()
     title_rect.midtop = (WIDTH // 2, 10) 
 
     ##buttons##
-    sign_in_button=Button('signIn.png',(540,350),'hover_signIn.png')
-    register_button=Button('register.png',(540,450),'register-hover.png')
+    sign_in_button=Button('buttons/signIn.png',(540,350),'buttons/hover_signIn.png')
+    register_button=Button('buttons/register.png',(540,450),'buttons/register-hover.png')
         
 
     while True:
@@ -56,25 +56,25 @@ def main_menu():
 def sign_in_menu():
     pygame.display.set_caption('Sign In')
     SCREEN.fill((0,0,0))
-    BG=pygame.image.load("sign-in-bg.png").convert_alpha()
+    BG=pygame.image.load("bgs/sign-in-bg.png").convert_alpha()
     BG = pygame.transform.scale(BG, (WIDTH, HEIGHT))
 
     ##title##
-    title=pygame.image.load('sign-in-title.png').convert_alpha()
+    title=pygame.image.load('titles/sign-in-title.png').convert_alpha()
     title_rect=title.get_rect()
     title_rect.midtop = (WIDTH // 2, 10) 
 
-    username_tag=pygame.image.load('username-tag.png').convert_alpha()
+    username_tag=pygame.image.load('buttons/username-tag.png').convert_alpha()
     username_tag_rect=username_tag.get_rect()
     username_tag_rect.midtop=((WIDTH//2)-150, 250)
-    password_tag=pygame.image.load('password-tag.png').convert_alpha()
+    password_tag=pygame.image.load('buttons/password-tag.png').convert_alpha()
     password_tag_rect=password_tag.get_rect()
     password_tag_rect.midtop=((WIDTH//2)-150, 350)
 
     username_input=Textbox(200, 35, ((WIDTH//2)-50, 275),'Enter Username...')
     password_input=Textbox(200, 35, ((WIDTH//2)-50, 375),'Enter Password...')
 
-    submit_button=Button('submit-button.png',((WIDTH//2)-20, 525),'submit-button-hover.png')
+    submit_button=Button('buttons/submit-button.png',((WIDTH//2)-20, 525),'buttons/submit-button-hover.png')
 
     while True:
         mouse_pos=pygame.mouse.get_pos()
@@ -108,25 +108,25 @@ def sign_in_menu():
 def register_menu():
     pygame.display.set_caption('Sign In')
     SCREEN.fill((0,0,0))
-    BG=pygame.image.load("sign-in-bg.png").convert_alpha()
+    BG=pygame.image.load("bgs/sign-in-bg.png").convert_alpha()
     BG = pygame.transform.scale(BG, (WIDTH, HEIGHT))
 
     ##title##
-    title=pygame.image.load('register-title.png').convert_alpha()
+    title=pygame.image.load('titles/register-title.png').convert_alpha()
     title_rect=title.get_rect()
     title_rect.midtop = (WIDTH // 2, 10) 
 
-    username_tag=pygame.image.load('username-tag.png').convert_alpha()
+    username_tag=pygame.image.load('buttons/username-tag.png').convert_alpha()
     username_tag_rect=username_tag.get_rect()
     username_tag_rect.midtop=((WIDTH//2)-150, 250)
-    password_tag=pygame.image.load('password-tag.png').convert_alpha()
+    password_tag=pygame.image.load('buttons/password-tag.png').convert_alpha()
     password_tag_rect=password_tag.get_rect()
     password_tag_rect.midtop=((WIDTH//2)-150, 350)
 
     username_input=Textbox(200, 35, ((WIDTH//2)-50, 275),'Enter Username...')
     password_input=Textbox(200, 35, ((WIDTH//2)-50, 375),'Enter Password...')
 
-    submit_button=Button('submit-button.png',((WIDTH//2)-20, 525),'submit-button-hover.png')
+    submit_button=Button('buttons/submit-button.png',((WIDTH//2)-20, 525),'buttons/submit-button-hover.png')
 
     while True:
         mouse_pos=pygame.mouse.get_pos()
@@ -167,7 +167,7 @@ def game():
     moving_down=False
 
 
-    player=Player('luffy-standing1.png', WIDTH, HEIGHT)
+    player=Player('luffy idle/luffy-standing1.png', WIDTH, HEIGHT)
 
     while running:
         SCREEN.fill(BG)
@@ -201,4 +201,3 @@ def game():
         pygame.display.flip()
         clock.tick(FPS)
 
-game()        

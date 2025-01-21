@@ -1,7 +1,9 @@
 import pygame
 import sys
 from perlin_noise import PerlinNoise
+from Player import *
 import random
+import noise
 
 
 pygame.init()
@@ -14,8 +16,7 @@ SCREEN=pygame.display.set_mode((WIDTH, HEIGHT))
 FPS=60
 clock=pygame.time.Clock()
 
-GRID_SIZE = 25
-CELL_SIZE = WIDTH // GRID_SIZE
+
 
 def main_menu():
     pygame.display.set_caption('Main menu')
@@ -157,48 +158,47 @@ def register_menu():
         pygame.display.update()         
 
 def game():
-    def generate_dungeon():
-        seed=random.randint(0,10000)
-        noise=PerlinNoise(10,seed)
-        dungeon=[]
-        for y in range (GRID_SIZE):
-            row=[]
-            for x in range (GRID_SIZE):
-                tile=noise((x/GRID_SIZE, y/GRID_SIZE))
-                if tile>-0.05:
-                    row.append(0)
-                else:
-                    row.append(1)    
-            dungeon.append(row) 
+    pygame.display.set_caption('Game')
+    BG=(0,0,0)
+    running=True
+    moving_left=False
+    moving_right=False
+    moving_up=False
+    moving_down=False
 
-            
 
-        return dungeon    
+    player=Player('luffy-standing1.png', WIDTH, HEIGHT)
 
-    def draw_dungeon(dungeon):
-        for y, row in enumerate(dungeon):
-            for x, cell in enumerate(row):
-                color = (128,128,128) if cell == 1 else (0,0,0)
-                rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-                pygame.draw.rect(SCREEN, color, rect)     
-
-    dungeon=generate_dungeon()
-    running = True
     while running:
+        SCREEN.fill(BG)
+        player.draw(SCREEN) 
+        player.movement(moving_left, moving_right, moving_up, moving_down)  
+
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+            if event.type==pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type==pygame.KEYDOWN:
+                if event.key==pygame.K_d:
+                    moving_right=True
+                if event.key==pygame.K_a:
+                    moving_left=True
+                if event.key==pygame.K_w:
+                    moving_up=True
+                if event.key==pygame.K_s:
+                    moving_down=True
+            if event.type==pygame.KEYUP:
+                if event.key==pygame.K_d:
+                    moving_right=False
+                if event.key==pygame.K_a:
+                    moving_left=False
+                if event.key==pygame.K_w:
+                    moving_up=False               
+                if event.key==pygame.K_s:
+                    moving_down=False    
+             
 
-        # Draw the dungeon
-        SCREEN.fill((0, 0, 0))  # Clear the screen
-        draw_dungeon(dungeon)
-
-        pygame.display.flip()  # Update the display
+        pygame.display.flip()
         clock.tick(FPS)
 
-    pygame.quit()
-    sys.exit()            
-
-
-#main_menu()
 game()        

@@ -159,7 +159,7 @@ def register_menu():
 
 def game():
     pygame.display.set_caption('Game')
-    BG=(0,0,0)
+    BG=(128,128,128)
     running=True
     moving_left=False
     moving_right=False
@@ -167,12 +167,13 @@ def game():
     moving_down=False
 
 
-    player=Player('luffy idle/luffy-standing1.png', WIDTH, HEIGHT)
+    player=Player(500, 300)
 
     while running:
         SCREEN.fill(BG)
         player.draw(SCREEN) 
-        player.movement(moving_left, moving_right, moving_up, moving_down)  
+        player.movement(moving_left, moving_right, moving_up, moving_down) 
+        player.update_animation() 
 
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
@@ -201,3 +202,4 @@ def game():
         pygame.display.flip()
         clock.tick(FPS)
 
+game()

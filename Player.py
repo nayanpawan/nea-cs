@@ -1,4 +1,5 @@
 import pygame
+import os
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -10,30 +11,29 @@ class Player(pygame.sprite.Sprite):
         self.health=True
         self.direction=1
         self.flip=False
+        self.attacking=False
 
         self.animation_list=[]
         self.frame_index=0
         self.action=0
 
-        temp_list=[]
-        for i in range(7):
-            img=pygame.image.load(f'luffy idle/idle{i}.png')
-            temp_list.append(img)
-        self.animation_list.append(temp_list)  
-
-        temp_list=[]
-        for i in range(5):
-            img=pygame.image.load(f'luffy walking/walking{i}.png')
-            temp_list.append(img)
-        self.animation_list.append(temp_list)   
+        animations=['idle', 'walking', 'attack']
+        for animation in animations:
+            temp_list=[]
+            frames=len(os.listdir(f'luffy {animation}'))
+            for i in range(frames):
+                img=pygame.image.load(f'luffy {animation}/{animation}{i}.png')
+                temp_list.append(img)
+            self.animation_list.append(temp_list)  
 
         self.image=self.animation_list[self.frame_index][0]
         self.rect=self.image.get_frect(center=(self.x,self.y))    
 
 
-    def movement(self, moving_left, moving_right, moving_up, moving_down):
+    def movement(self, moving_left, moving_right, moving_up, moving_down, attacking):
         dy=0
         dx=0
+        self.attacking=attacking
         
         if moving_left:
             dx=-self.speed.x
@@ -65,7 +65,10 @@ class Player(pygame.sprite.Sprite):
             self.update_time=pygame.time.get_ticks()
             self.frame_index+=1
         if self.frame_index> len(self.animation_list[self.action])-1:
-            self.frame_index=0 
+            if self.action==2:
+                self.attacking=False
+            else:          
+                self.frame_index=0 
         self.image=self.animation_list[self.action][self.frame_index]    
 
     def draw(self, screen):

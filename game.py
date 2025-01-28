@@ -161,24 +161,28 @@ def game():
     pygame.display.set_caption('Game')
     BG=(128,128,128)
     running=True
+
     moving_left=False
     moving_right=False
     moving_up=False
     moving_down=False
+    attacking=False
 
 
     player=Player(500, 300)
 
     while running:
         SCREEN.fill(BG)
-        player.draw(SCREEN) 
+        player.draw(SCREEN)
         if player.health:
             if moving_left or moving_right or moving_up or moving_down:
                 player.update_action(1)
+            elif player.attacking:
+                player.update_action(2)
             else:
                 player.update_action(0)    
 
-        player.movement(moving_left, moving_right, moving_up, moving_down) 
+        player.movement(moving_left, moving_right, moving_up, moving_down, attacking) 
         player.update_animation() 
 
         for event in pygame.event.get():
@@ -194,6 +198,11 @@ def game():
                     moving_up=True
                 if event.key==pygame.K_s:
                     moving_down=True
+                if event.key==pygame.K_k:
+                    if not attacking:
+                        attacking=True
+            
+            
             if event.type==pygame.KEYUP:
                 if event.key==pygame.K_d:
                     moving_right=False
@@ -202,7 +211,8 @@ def game():
                 if event.key==pygame.K_w:
                     moving_up=False               
                 if event.key==pygame.K_s:
-                    moving_down=False    
+                    moving_down=False  
+     
              
 
         pygame.display.flip()

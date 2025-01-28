@@ -172,6 +172,12 @@ def game():
     while running:
         SCREEN.fill(BG)
         player.draw(SCREEN) 
+        if player.health:
+            if moving_left or moving_right or moving_up or moving_down:
+                player.update_action(1)
+            else:
+                player.update_action(0)    
+
         player.movement(moving_left, moving_right, moving_up, moving_down) 
         player.update_animation() 
 

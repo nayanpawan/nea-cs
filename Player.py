@@ -33,8 +33,7 @@ class Player(pygame.sprite.Sprite):
     def movement(self, moving_left, moving_right, moving_up, moving_down, attacking):
         dy=0
         dx=0
-        self.attacking=attacking
-        
+
         if moving_left:
             dx=-self.speed.x
             self.flip=False
@@ -46,7 +45,9 @@ class Player(pygame.sprite.Sprite):
         if moving_up:
             dy=-self.speed.y 
         if moving_down:
-            dy=self.speed.y  
+            dy=self.speed.y 
+        if attacking:
+            self.attacking=True     
 
         self.rect.x+=dx
         self.rect.y+=dy    
@@ -64,11 +65,10 @@ class Player(pygame.sprite.Sprite):
         if pygame.time.get_ticks()-self.update_time>ANIMATION_COOLDOWN:
             self.update_time=pygame.time.get_ticks()
             self.frame_index+=1
-        if self.frame_index> len(self.animation_list[self.action])-1:
-            if self.action==2:
+        if self.frame_index> len(self.animation_list[self.action])-1:    
+            if self.attacking:
                 self.attacking=False
-            else:          
-                self.frame_index=0 
+            self.frame_index=0 
         self.image=self.animation_list[self.action][self.frame_index]    
 
     def draw(self, screen):

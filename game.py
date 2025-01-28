@@ -212,6 +212,8 @@ def game():
                     moving_up=False               
                 if event.key==pygame.K_s:
                     moving_down=False  
+                if event.key==pygame.K_k:
+                        attacking=False    
      
              
 

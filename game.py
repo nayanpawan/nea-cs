@@ -1,7 +1,7 @@
 import pygame
 import sys
 from perlin_noise import PerlinNoise
-from Player import *
+from sprites import *
 import random
 import noise
 
@@ -170,10 +170,51 @@ def game():
 
 
     player=Player(500, 300)
+    GRID_SIZE = 40
+    CELL_SIZE = WIDTH // GRID_SIZE
 
+    def generate_dungeon():
+        seed=random.randint(0,10000)
+        noise1=PerlinNoise(2,seed)
+        noise2=PerlinNoise(4,seed)
+        noise3=PerlinNoise(8,seed)
+        dungeon=[]
+        for y in range (GRID_SIZE):
+            row=[]
+            for x in range (GRID_SIZE):
+                tile=noise1((x/GRID_SIZE, y/GRID_SIZE))
+                tile+=noise2((x/GRID_SIZE, y/GRID_SIZE))*0.5
+                tile+=noise3((x/GRID_SIZE, y/GRID_SIZE))*0.25
+                if tile>0:
+                    row.append(0)#ground
+                elif tile<-0.2:
+                    row.append(2)#snow
+                else:
+                    row.append(1)#stone   
+            dungeon.append(row) 
+        return dungeon    
+    
+    def draw_dungeon(dungeon):
+        for y, row in enumerate(dungeon):
+            for x, cell in enumerate(row):
+                if cell==1:
+                    wall= Block(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,(136,140,141))
+                    walls.add(wall)
+                    pygame.draw.rect(SCREEN, wall.colour, wall.rect)   
+                elif cell==2:
+                    snow=Block(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,(250,249,247))
+                    walls.add(snow)
+                    pygame.draw.rect(SCREEN, snow.colour, snow.rect)   
+                else:
+                    colour=(86,125,70) 
+                    rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                    pygame.draw.rect(SCREEN, colour, rect) 
+    
+    dungeon=generate_dungeon()
+
+    walls = pygame.sprite.Group()
     while running:
         SCREEN.fill(BG)
-        player.draw(SCREEN)
         if player.health:
             if moving_left or moving_right or moving_up or moving_down:
                 player.update_action(1)
@@ -182,7 +223,7 @@ def game():
             else:
                 player.update_action(0)    
 
-        player.movement(moving_left, moving_right, moving_up, moving_down, attacking) 
+        player.movement(moving_left, moving_right, moving_up, moving_down, attacking, walls) 
         player.update_animation() 
 
         for event in pygame.event.get():
@@ -215,8 +256,8 @@ def game():
                 if event.key==pygame.K_k:
                         attacking=False    
      
-             
-
+        draw_dungeon(dungeon)   
+        player.draw(SCREEN) 
         pygame.display.flip()
         clock.tick(FPS)
 

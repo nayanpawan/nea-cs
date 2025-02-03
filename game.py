@@ -3,7 +3,6 @@ import sys
 from perlin_noise import PerlinNoise
 from sprites import *
 import random
-import noise
 
 
 pygame.init()
@@ -162,19 +161,15 @@ def game():
     BG=(128,128,128)
     running=True
 
-    moving_left=False
-    moving_right=False
-    moving_up=False
-    moving_down=False
-    attacking=False
-
-
-    player=Player(500, 300)
-    GRID_SIZE = 40
+    #player=Player(500, 300)
+    GRID_SIZE = 20
     CELL_SIZE = WIDTH // GRID_SIZE
 
+    camera_x=0
+    camera_y=0
+
     def generate_dungeon():
-        seed=random.randint(0,10000)
+        seed=random.randint(0,1000)
         noise1=PerlinNoise(2,seed)
         noise2=PerlinNoise(4,seed)
         noise3=PerlinNoise(8,seed)
@@ -184,11 +179,13 @@ def game():
             for x in range (GRID_SIZE):
                 tile=noise1((x/GRID_SIZE, y/GRID_SIZE))
                 tile+=noise2((x/GRID_SIZE, y/GRID_SIZE))*0.5
-                tile+=noise3((x/GRID_SIZE, y/GRID_SIZE))*0.25
-                if tile>0:
+                tile+=noise3((x/GRID_SIZE, y/GRID_SIZE))*0.11
+                if tile>-0.2 and tile<0.3:
                     row.append(0)#ground
-                elif tile<-0.2:
+                elif tile<-0.4:
                     row.append(2)#snow
+                elif tile>0.3:
+                    row.append(3)#water    
                 else:
                     row.append(1)#stone   
             dungeon.append(row) 
@@ -197,67 +194,53 @@ def game():
     def draw_dungeon(dungeon):
         for y, row in enumerate(dungeon):
             for x, cell in enumerate(row):
-                if cell==1:
-                    wall= Block(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,(136,140,141))
-                    walls.add(wall)
-                    pygame.draw.rect(SCREEN, wall.colour, wall.rect)   
-                elif cell==2:
-                    snow=Block(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE,(250,249,247))
-                    walls.add(snow)
-                    pygame.draw.rect(SCREEN, snow.colour, snow.rect)   
-                else:
-                    colour=(86,125,70) 
-                    rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-                    pygame.draw.rect(SCREEN, colour, rect) 
+                terrain=Block(x,y,cell,CELL_SIZE)
+                all_terrain_group.add(terrain)
+
+                if cell==1 or cell==2 :
+                    collideable_terrain.add(terrain)
+
+
+    all_terrain_group = pygame.sprite.Group()
+    collideable_terrain=pygame.sprite.Group()
     
     dungeon=generate_dungeon()
+    draw_dungeon(dungeon)
 
-    walls = pygame.sprite.Group()
+    for y, row in enumerate(dungeon):
+            for x, cell in enumerate(row):
+                if cell==0:
+                    player=Player(x*GRID_SIZE,y*GRID_SIZE)
+
+
+
     while running:
         SCREEN.fill(BG)
         if player.health:
-            if moving_left or moving_right or moving_up or moving_down:
+            if player.moving_left or player.moving_right or player.moving_up or player.moving_down:
                 player.update_action(1)
             elif player.attacking:
                 player.update_action(2)
             else:
                 player.update_action(0)    
 
-        player.movement(moving_left, moving_right, moving_up, moving_down, attacking, walls) 
         player.update_animation() 
 
         for event in pygame.event.get():
+            player.movement(event) 
             if event.type==pygame.QUIT:
                 pygame.quit()
-                sys.exit()
-            if event.type==pygame.KEYDOWN:
-                if event.key==pygame.K_d:
-                    moving_right=True
-                if event.key==pygame.K_a:
-                    moving_left=True
-                if event.key==pygame.K_w:
-                    moving_up=True
-                if event.key==pygame.K_s:
-                    moving_down=True
-                if event.key==pygame.K_k:
-                    if not attacking:
-                        attacking=True
-            
-            
-            if event.type==pygame.KEYUP:
-                if event.key==pygame.K_d:
-                    moving_right=False
-                if event.key==pygame.K_a:
-                    moving_left=False
-                if event.key==pygame.K_w:
-                    moving_up=False               
-                if event.key==pygame.K_s:
-                    moving_down=False  
-                if event.key==pygame.K_k:
-                        attacking=False    
-     
-        draw_dungeon(dungeon)   
-        player.draw(SCREEN) 
+                sys.exit() 
+
+        camera_x=-player.rect.x+WIDTH//2
+        camera_y=-player.rect.y+HEIGHT//2
+
+        for sprite in all_terrain_group:
+            SCREEN.blit(sprite.image, (sprite.rect.x + camera_x, sprite.rect.y + camera_y))
+
+        # Draw player with camera offset
+  
+        player.draw(SCREEN)
         pygame.display.flip()
         clock.tick(FPS)
 

@@ -161,8 +161,8 @@ def game():
     BG=(128,128,128)
     running=True
 
-    #player=Player(500, 300)
-    GRID_SIZE = 20
+    WORLD_SIZE=8
+    GRID_SIZE = 90
     CELL_SIZE = WIDTH // GRID_SIZE
 
     camera_x=0
@@ -179,13 +179,15 @@ def game():
             for x in range (GRID_SIZE):
                 tile=noise1((x/GRID_SIZE, y/GRID_SIZE))
                 tile+=noise2((x/GRID_SIZE, y/GRID_SIZE))*0.5
-                tile+=noise3((x/GRID_SIZE, y/GRID_SIZE))*0.11
-                if tile>-0.2 and tile<0.3:
+                tile+=noise3((x/GRID_SIZE, y/GRID_SIZE))*0.25
+                if tile>-0.2 and tile<0.15:
                     row.append(0)#ground
                 elif tile<-0.4:
                     row.append(2)#snow
-                elif tile>0.3:
-                    row.append(3)#water    
+                elif tile>0.2:
+                    row.append(3)#water  
+                elif tile>0.15 and tile<0.2:
+                    row.append(4)  #sand
                 else:
                     row.append(1)#stone   
             dungeon.append(row) 
@@ -196,6 +198,7 @@ def game():
             for x, cell in enumerate(row):
                 terrain=Block(x,y,cell,CELL_SIZE)
                 all_terrain_group.add(terrain)
+                all_sprites.add(terrain)
 
                 if cell==1 or cell==2 :
                     collideable_terrain.add(terrain)
@@ -203,14 +206,24 @@ def game():
 
     all_terrain_group = pygame.sprite.Group()
     collideable_terrain=pygame.sprite.Group()
+    all_sprites=pygame.sprite.Group()
     
     dungeon=generate_dungeon()
     draw_dungeon(dungeon)
 
+    spawn_x, spawn_y = None, None
     for y, row in enumerate(dungeon):
-            for x, cell in enumerate(row):
-                if cell==0:
-                    player=Player(x*GRID_SIZE,y*GRID_SIZE)
+        for x, cell in enumerate(row):
+            if cell == 0:  
+                spawn_x = x * GRID_SIZE
+                spawn_y = y * GRID_SIZE
+                break  
+        if spawn_x is not None:
+            break 
+
+    player = Player(spawn_x, spawn_y)
+
+    all_sprites.add(player)                
 
 
 
@@ -226,21 +239,19 @@ def game():
 
         player.update_animation() 
 
-        for event in pygame.event.get():
-            player.movement(event) 
-            if event.type==pygame.QUIT:
-                pygame.quit()
-                sys.exit() 
+        events=pygame.event.get()
+        player.movement(events, collideable_terrain) 
+
 
         camera_x=-player.rect.x+WIDTH//2
         camera_y=-player.rect.y+HEIGHT//2
 
-        for sprite in all_terrain_group:
-            SCREEN.blit(sprite.image, (sprite.rect.x + camera_x, sprite.rect.y + camera_y))
+        for sprite in all_sprites:
+            if sprite != player:
+                SCREEN.blit(sprite.image, (sprite.rect.x + camera_x, sprite.rect.y + camera_y))
 
-        # Draw player with camera offset
   
-        player.draw(SCREEN)
+        player.draw(SCREEN,camera_x,camera_y)
         pygame.display.flip()
         clock.tick(FPS)
 

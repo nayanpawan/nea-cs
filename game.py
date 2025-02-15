@@ -3,6 +3,8 @@ import sys
 from perlin_noise import PerlinNoise
 from sprites import *
 import random
+#from generation im
+# port *
 
 
 pygame.init()
@@ -157,16 +159,20 @@ def register_menu():
         pygame.display.update()         
 
 def game():
+    
     pygame.display.set_caption('Game')
     BG=(128,128,128)
     running=True
 
-    WORLD_SIZE=8
-    GRID_SIZE = 90
+    WORLD_SIZE=2
+    GRID_SIZE = 50
     CELL_SIZE = WIDTH // GRID_SIZE
 
     camera_x=0
     camera_y=0
+
+    map=[]
+
 
     def generate_dungeon():
         seed=random.randint(0,1000)
@@ -180,54 +186,75 @@ def game():
                 tile=noise1((x/GRID_SIZE, y/GRID_SIZE))
                 tile+=noise2((x/GRID_SIZE, y/GRID_SIZE))*0.5
                 tile+=noise3((x/GRID_SIZE, y/GRID_SIZE))*0.25
-                if tile>-0.2 and tile<0.15:
+                if tile>-0.2 and tile<0.15 or tile>0.45 and tile<0.6:
                     row.append(0)#ground
                 elif tile<-0.4:
                     row.append(2)#snow
-                elif tile>0.2:
+                elif tile>0.2 and tile<0.45:
                     row.append(3)#water  
                 elif tile>0.15 and tile<0.2:
                     row.append(4)  #sand
-                else:
+                elif tile<-0.2 and tile>-0.4 or tile>0.6:
                     row.append(1)#stone   
             dungeon.append(row) 
-        return dungeon    
-    
-    def draw_dungeon(dungeon):
-        for y, row in enumerate(dungeon):
-            for x, cell in enumerate(row):
-                terrain=Block(x,y,cell,CELL_SIZE)
-                all_terrain_group.add(terrain)
-                all_sprites.add(terrain)
+        return dungeon 
 
-                if cell==1 or cell==2 :
-                    collideable_terrain.add(terrain)
+    def generate_world():
+        for y in range(WORLD_SIZE):
+            row=[]
+            for x in range(WORLD_SIZE):
+                row.append(generate_dungeon())
+            map.append(row) 
+        return map    
+    
+    map=generate_world()
+
+    
+    
+    def draw_dungeon(map):
+        for b in range(WORLD_SIZE):
+            for a in range(WORLD_SIZE):
+                dungeon=map[a][b]
+                for y, row in enumerate(dungeon):
+                    for x, cell in enumerate(row):
+                        terrain=Block(x,y,cell,CELL_SIZE,a,b,GRID_SIZE)
+                        all_terrain_group.add(terrain)
+                        all_sprites.add(terrain)
+
+                        if cell==1 or cell==2 :
+                            collideable_terrain.add(terrain)
 
 
     all_terrain_group = pygame.sprite.Group()
     collideable_terrain=pygame.sprite.Group()
     all_sprites=pygame.sprite.Group()
     
-    dungeon=generate_dungeon()
-    draw_dungeon(dungeon)
+    map=generate_world()
+    draw_dungeon(map)
 
     spawn_x, spawn_y = None, None
-    for y, row in enumerate(dungeon):
-        for x, cell in enumerate(row):
-            if cell == 0:  
-                spawn_x = x * GRID_SIZE
-                spawn_y = y * GRID_SIZE
-                break  
-        if spawn_x is not None:
-            break 
+    for b in range(WORLD_SIZE):
+        for a in range(WORLD_SIZE):
+            dungeon=map[a][b]
+            for y, row in enumerate(dungeon):
+                for x, cell in enumerate(row):
+                    if cell == 0:  
+                        spawn_x = x * GRID_SIZE
+                        spawn_y = y * GRID_SIZE
+                        break  
+                if spawn_x is not None:
+                    break 
 
     player = Player(spawn_x, spawn_y)
 
-    all_sprites.add(player)                
+
+    all_sprites.add(player)        
 
 
 
     while running:
+
+
         SCREEN.fill(BG)
         if player.health:
             if player.moving_left or player.moving_right or player.moving_up or player.moving_down:

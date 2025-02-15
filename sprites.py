@@ -7,6 +7,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.update_time=pygame.time.get_ticks()
+
         self.x=x
         self.y=y
         self.speed=pygame.math.Vector2(4)
@@ -88,10 +89,10 @@ class Player(pygame.sprite.Sprite):
             self.direction=-1
         
         if self.moving_up:
-            self.dy=-self.speed.y 
+            self.dy=-self.speed.y
         
         if self.moving_down:
-            self.dy=self.speed.y 
+            self.dy=self.speed.y
         
         if self.attacking:
             self.attacking=True     
@@ -138,25 +139,25 @@ class Player(pygame.sprite.Sprite):
 
 
 class Block(pygame.sprite.Sprite):
-    def __init__(self, x, y, cell, CELL_SIZE):
+    def __init__(self, x, y, cell, CELL_SIZE,a,b,GRID_SIZE):
         pygame.sprite.Sprite.__init__(self)
         if cell==1:
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE)) 
             self.image.fill((136,140,141))
-            self.rect=pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
         elif cell==2:
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE)) 
             self.image.fill((250,249,247))
-            self.rect=pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
         elif cell==3:
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE))  
             self.image.fill((38,102,145))
-            self.rect=pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
         elif cell==4:
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE))  
             self.image.fill((248,240,164))
-            self.rect=pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)    
+            self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)    
         else:
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE))  
             self.image.fill((86,125,70))
-            self.rect=pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)  
+            self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)  

@@ -19,13 +19,21 @@ class Player(pygame.sprite.Sprite):
         self.dy=0
 
         self.health=True
+        self.max_hp=100
+        self.hp=self.max_hp
+        self.max_stamina=100
+        self.stamina=self.max_stamina-30
+
         self.direction=1
         self.flip=False
         self.attacking=False
+        self.in_water=False
+        self.water_damage_timer = 0 
 
         self.animation_list=[]
         self.frame_index=0
         self.action=0
+        self.scale=0.7
 
         animations=['idle', 'walking', 'attack']
         for animation in animations:
@@ -34,8 +42,8 @@ class Player(pygame.sprite.Sprite):
             for i in range(frames):
                 img=pygame.image.load(f'luffy {animation}/{animation}{i}.png')
                 original_width, original_height = img.get_size()
-                new_width = int(original_width * (0.8))
-                new_height = int(original_height * (0.8))
+                new_width = int(original_width * (self.scale))
+                new_height = int(original_height * (self.scale))
                 img = pygame.transform.scale(img, (new_width, new_height))
                 temp_list.append(img)
             self.animation_list.append(temp_list)  
@@ -44,7 +52,7 @@ class Player(pygame.sprite.Sprite):
         self.rect=self.image.get_rect(topleft=(self.x,self.y))    
 
 
-    def movement(self, events, collideable_terrain):
+    def movement(self, events, collideable_terrain, all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
 
         self.dx=0
         self.dy=0 
@@ -65,6 +73,7 @@ class Player(pygame.sprite.Sprite):
                 if event.key==pygame.K_k:
                     if not self.attacking:
                         self.attacking=True
+                        
                 
                 
             if event.type==pygame.KEYUP:
@@ -77,6 +86,7 @@ class Player(pygame.sprite.Sprite):
                 if event.key==pygame.K_s:
                     self.moving_down=False 
 
+        self.check_terrain(all_terrain_group)
 
         if self.moving_left:
             self.dx=-self.speed.x
@@ -99,11 +109,12 @@ class Player(pygame.sprite.Sprite):
 
 
         self.rect.x+=self.dx
-        self.handle_collisions(collideable_terrain)
+        self.handle_collisions(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
         self.rect.y+=self.dy
-        self.handle_collisions(collideable_terrain)
+        self.handle_collisions(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
 
-    def handle_collisions(self, collideable_terrain):
+
+    def handle_collisions(self, collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
         for tile in collideable_terrain:
             if self.rect.colliderect(tile.rect):  
                 if self.moving_right:
@@ -114,6 +125,30 @@ class Player(pygame.sprite.Sprite):
                     self.rect.y-=self.dy
                 if self.moving_down:
                     self.rect.y-=self.dy
+        if self.rect.x<0 or self.rect.x>CELL_SIZE*GRID_SIZE*WORLD_SIZE-self.rect.width:
+            self.rect.x-=self.dx
+        if self.rect.y<0 or self.rect.y>CELL_SIZE*GRID_SIZE*WORLD_SIZE-self.rect.height:
+            self.rect.y-=self.dy
+    
+    def check_terrain(self, all_terrain_group):
+        self.in_water=False
+        for block in all_terrain_group:
+            if self.rect.colliderect(block.rect):
+                if block.cell==3: #3:water#
+                    self.in_water=True
+                    self.speed=pygame.math.Vector2(2)
+                else:
+                    self.speed=pygame.math.Vector2(4)  
+
+        if self.in_water:
+            self.water_damage_timer += 1
+            if self.water_damage_timer % 60 == 0:
+                self.hp -= 5    
+        else:
+            self.speed = pygame.math.Vector2(4)   
+            self.water_damage_timer = 0                  
+
+
 
     def update_action(self, new_action):
         if new_action != self.action:
@@ -141,6 +176,7 @@ class Player(pygame.sprite.Sprite):
 class Block(pygame.sprite.Sprite):
     def __init__(self, x, y, cell, CELL_SIZE,a,b,GRID_SIZE):
         pygame.sprite.Sprite.__init__(self)
+        self.cell=cell
         if cell==1:
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE)) 
             self.image.fill((136,140,141))

@@ -3,8 +3,7 @@ import sys
 from perlin_noise import PerlinNoise
 from sprites import *
 import random
-#from generation im
-# port *
+
 
 
 pygame.init()
@@ -161,11 +160,11 @@ def register_menu():
 def game():
     
     pygame.display.set_caption('Game')
-    BG=(128,128,128)
+    BG=(0,0,0)
     running=True
 
     WORLD_SIZE=2
-    GRID_SIZE = 50
+    GRID_SIZE = 60
     CELL_SIZE = WIDTH // GRID_SIZE
 
     camera_x=0
@@ -248,7 +247,19 @@ def game():
     player = Player(spawn_x, spawn_y)
 
 
-    all_sprites.add(player)        
+    all_sprites.add(player)  
+
+    def draw_healthbar(SCREEN):
+        ratio=player.hp/player.max_hp
+        pygame.draw.rect(SCREEN,(0,0,0),(10, 10, 300, 40))
+        pygame.draw.rect(SCREEN,(255,0,0),(10, 10, 295, 35))
+        pygame.draw.rect(SCREEN,(0,255,0),(10, 10, ratio*295, 35)) 
+
+    def draw_hungerbar(SCREEN):
+        ratio=player.stamina/player.max_stamina
+        pygame.draw.rect(SCREEN,(0,0,0),(10, 60, 300, 40))
+        pygame.draw.rect(SCREEN,(211,211,211),(10, 60, 295, 35))
+        pygame.draw.rect(SCREEN,(128,84,47),(10, 60, ratio*295, 35))     
 
 
 
@@ -267,7 +278,7 @@ def game():
         player.update_animation() 
 
         events=pygame.event.get()
-        player.movement(events, collideable_terrain) 
+        player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE) 
 
 
         camera_x=-player.rect.x+WIDTH//2
@@ -279,6 +290,8 @@ def game():
 
   
         player.draw(SCREEN,camera_x,camera_y)
+        draw_healthbar(SCREEN)
+        draw_hungerbar(SCREEN)
         pygame.display.flip()
         clock.tick(FPS)
 

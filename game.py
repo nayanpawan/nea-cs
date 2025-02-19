@@ -174,7 +174,7 @@ def game():
 
 
     def generate_dungeon():
-        seed=random.randint(0,1000)
+        seed=random.randint(0,10000)
         noise1=PerlinNoise(2,seed)
         noise2=PerlinNoise(4,seed)
         noise3=PerlinNoise(8,seed)
@@ -267,18 +267,27 @@ def game():
 
 
         SCREEN.fill(BG)
+
+        if player.hp>0:
+            player.health=True
+        else:
+            player.health=False
+        
         if player.health:
             if player.moving_left or player.moving_right or player.moving_up or player.moving_down:
                 player.update_action(1)
             elif player.attacking:
                 player.update_action(2)
             else:
-                player.update_action(0)    
+                player.update_action(0)
+        else:
+            player.update_action(3)       
 
         player.update_animation() 
 
         events=pygame.event.get()
         player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE) 
+        player.heal()
 
 
         camera_x=-player.rect.x+WIDTH//2

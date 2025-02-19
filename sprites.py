@@ -20,22 +20,23 @@ class Player(pygame.sprite.Sprite):
 
         self.health=True
         self.max_hp=100
-        self.hp=self.max_hp
+        self.hp=self.max_hp-85  
         self.max_stamina=100
-        self.stamina=self.max_stamina-30
+        self.stamina=self.max_stamina
 
         self.direction=1
         self.flip=False
         self.attacking=False
         self.in_water=False
         self.water_damage_timer = 0 
+        self.heal_timer=0
 
         self.animation_list=[]
         self.frame_index=0
         self.action=0
         self.scale=0.7
 
-        animations=['idle', 'walking', 'attack']
+        animations=['idle', 'walking', 'attack','dying']
         for animation in animations:
             temp_list=[]
             frames=len(os.listdir(f'luffy {animation}'))
@@ -61,18 +62,22 @@ class Player(pygame.sprite.Sprite):
             if event.type==pygame.QUIT:
                 pygame.quit()
 
-            if event.type==pygame.KEYDOWN:
-                if event.key==pygame.K_d:
-                    self.moving_right=True
-                if event.key==pygame.K_a:
-                    self.moving_left=True
-                if event.key==pygame.K_w:
-                    self.moving_up=True
-                if event.key==pygame.K_s:
-                    self.moving_down=True
-                if event.key==pygame.K_k:
-                    if not self.attacking:
-                        self.attacking=True
+            if self.health:    
+
+                if event.type==pygame.KEYDOWN:
+                    if event.key==pygame.K_d:
+                        self.moving_right=True
+                    if event.key==pygame.K_a:
+                        self.moving_left=True
+                    if event.key==pygame.K_w:
+                        self.moving_up=True
+                    if event.key==pygame.K_s:
+                        self.moving_down=True
+                    if event.key==pygame.K_k:
+                        if not self.attacking:
+                            self.stamina-=2
+                            if self.stamina>2:
+                                self.attacking=True
                         
                 
                 
@@ -148,6 +153,14 @@ class Player(pygame.sprite.Sprite):
             self.speed = pygame.math.Vector2(4)   
             self.water_damage_timer = 0                  
 
+    def heal(self):
+        if self.hp<100 and self.stamina>0 and self.health:
+            self.heal_timer+=1
+            if self.heal_timer % 120==0:
+                self.hp+=5
+                self.stamina-=5
+        else:
+            self.heal_timer=0        
 
 
     def update_action(self, new_action):
@@ -166,7 +179,10 @@ class Player(pygame.sprite.Sprite):
         if self.frame_index> len(self.animation_list[self.action])-1:    
             if self.attacking:
                 self.attacking=False
-            self.frame_index=0 
+            if self.action == 3: 
+                self.frame_index = len(self.animation_list[self.action]) - 1 
+            else:
+                self.frame_index = 0  
         self.image=self.animation_list[self.action][self.frame_index]    
 
     def draw(self, screen, camera_x, camera_y):

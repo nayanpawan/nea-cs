@@ -1,5 +1,6 @@
 import pygame
 import os
+import random
 
 pygame.init()
 
@@ -238,17 +239,19 @@ class Enemies(pygame.sprite.Sprite):
         self.flip=False
 
         self.move_counter=0
+        self.stopped=False
+        self.stop_counter=0
 
         self.animation_list=[]
         self.frame_index=0
         self.action=0
         self.scale=1.1
-        animations=['idle']
+        animations=['idle','walking']
         for animation in animations:
             temp_list=[]
             frames=len(os.listdir(f'{self.enemy_type} {animation}'))
             for i in range(frames):
-                img=pygame.image.load(f'{self.enemy_type} {animation}/{animation}{i}.png').convert_alpha()
+                img=pygame.image.load(f'{self.enemy_type} {animation}/{animation}{i}.png')
                 original_width, original_height = img.get_size()
                 new_width = int(original_width * (self.scale))
                 new_height = int(original_height * (self.scale))
@@ -261,19 +264,29 @@ class Enemies(pygame.sprite.Sprite):
 
     def patrol(self,CELL_SIZE):
         if self.health:
-            if self.direction==1 :
-                self.moving_left=True
-                self.moving_right=False
+            if self.stopped==False and random.randint(1,200)==5:
+                    self.stopped=True
+                    self.stop_counter=0
+            if self.stopped==False:
+                if self.direction==1 :
+                    self.moving_left=True
+                    self.moving_right=False
+                else:
+                    self.moving_left=False
+                    self.moving_right=True
+
+                self.movement()
+                self.update_action(1)
+                self.move_counter+=1
+
+                if self.move_counter>CELL_SIZE*4:
+                    self.direction*=-1
+                    self.move_counter*=-1
             else:
-                self.moving_left=False
-                self.moving_right=True
-
-            self.movement()
-            self.move_counter+=1
-
-            if self.move_counter>CELL_SIZE*4:
-                self.direction*=-1
-                self.move_counter*=-1
+                self.update_action(0)
+                self.stop_counter+=1
+                if self.stop_counter>50:
+                    self.stopped=False        
 
     def movement(self):
 
@@ -327,6 +340,6 @@ class Enemies(pygame.sprite.Sprite):
 
     def draw(self, screen, camera_x, camera_y):
         screen.blit(pygame.transform.flip(self.image, self.flip, False),(self.rect.x + camera_x, self.rect.y + camera_y))
-    
+
 
 

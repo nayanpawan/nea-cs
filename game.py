@@ -284,16 +284,14 @@ def game():
                 player.update_action(0)
         else:
             player.update_action(3)   
-
-        marine.update_action(0)        
+      
 
         player.update_animation() 
-        marine.update_animation()
 
         events=pygame.event.get()
         player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE) 
         marine.patrol(CELL_SIZE)
-        print(marine.flip)
+        marine.update_animation()
         player.heal()
 
 
@@ -301,11 +299,12 @@ def game():
         camera_y=-player.rect.y+HEIGHT//2
 
         for sprite in all_sprites:
-            if sprite != player:
+            if (sprite != player) and sprite!= marine:
                 SCREEN.blit(sprite.image, (sprite.rect.x + camera_x, sprite.rect.y + camera_y))
 
   
         player.draw(SCREEN,camera_x,camera_y)
+        marine.draw(SCREEN, camera_x,camera_y)
         draw_healthbar(SCREEN)
         draw_hungerbar(SCREEN)
         pygame.display.flip()

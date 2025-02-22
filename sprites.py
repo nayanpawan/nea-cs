@@ -20,7 +20,7 @@ class Player(pygame.sprite.Sprite):
 
         self.health=True
         self.max_hp=100
-        self.hp=self.max_hp-85  
+        self.hp=self.max_hp
         self.max_stamina=100
         self.stamina=self.max_stamina
 
@@ -108,9 +108,7 @@ class Player(pygame.sprite.Sprite):
         
         if self.moving_down:
             self.dy=self.speed.y
-        
-        if self.attacking:
-            self.attacking=True     
+             
 
 
         self.rect.x+=self.dx
@@ -154,7 +152,7 @@ class Player(pygame.sprite.Sprite):
             self.water_damage_timer = 0                  
 
     def heal(self):
-        if self.hp<100 and self.stamina>0 and self.health:
+        if self.hp<100 and self.stamina>40 and self.health:
             self.heal_timer+=1
             if self.heal_timer % 120==0:
                 self.hp+=5
@@ -213,3 +211,122 @@ class Block(pygame.sprite.Sprite):
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE))  
             self.image.fill((86,125,70))
             self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)  
+
+
+class Enemies(pygame.sprite.Sprite):
+
+    def __init__(self, enemy_type, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.update_time=pygame.time.get_ticks()
+
+        self.enemy_type=enemy_type
+        self.x=x
+        self.y=y
+
+        self.speed=pygame.math.Vector2(1)
+        self.moving_left=False
+        self.moving_right=False
+        self.moving_up=False
+        self.moving_down=False
+        self.dx=0
+        self.dy=0
+
+        self.health=True
+        self.max_hp=100
+        self.attacking=False
+        self.direction=1
+        self.flip=False
+
+        self.move_counter=0
+
+        self.animation_list=[]
+        self.frame_index=0
+        self.action=0
+        self.scale=1.1
+        animations=['idle']
+        for animation in animations:
+            temp_list=[]
+            frames=len(os.listdir(f'{self.enemy_type} {animation}'))
+            for i in range(frames):
+                img=pygame.image.load(f'{self.enemy_type} {animation}/{animation}{i}.png').convert_alpha()
+                original_width, original_height = img.get_size()
+                new_width = int(original_width * (self.scale))
+                new_height = int(original_height * (self.scale))
+                img = pygame.transform.scale(img, (new_width, new_height))
+                temp_list.append(img)
+            self.animation_list.append(temp_list)  
+
+        self.image=self.animation_list[self.frame_index][0]
+        self.rect=self.image.get_rect(topleft=(self.x,self.y)) 
+
+    def patrol(self,CELL_SIZE):
+        if self.health:
+            if self.direction==1 :
+                self.moving_left=True
+                self.moving_right=False
+            else:
+                self.moving_left=False
+                self.moving_right=True
+
+            self.movement()
+            self.move_counter+=1
+
+            if self.move_counter>CELL_SIZE*4:
+                self.direction*=-1
+                self.move_counter*=-1
+
+    def movement(self):
+
+        self.dx=0
+        self.dy=0 
+
+        if self.moving_left:
+            self.dx=-self.speed.x
+            self.flip=False
+            self.direction=1
+        
+        if self.moving_right:
+            self.dx=self.speed.x
+            self.flip=True
+            self.direction=-1
+        
+        if self.moving_up:
+            self.dy=-self.speed.y
+        
+        if self.moving_down:
+            self.dy=self.speed.y
+        
+        if self.attacking:
+            self.attacking=True     
+
+
+        self.rect.x+=self.dx
+        self.rect.y+=self.dy
+
+    def update_action(self, new_action):
+        if new_action != self.action:
+            self.action=new_action
+            self.frame_index=0
+            self.update_time=pygame.time.get_ticks()
+        else:
+            self.action=self.action
+    
+    def update_animation(self):
+        ANIMATION_COOLDOWN=150
+        if pygame.time.get_ticks()-self.update_time>ANIMATION_COOLDOWN:
+            self.update_time=pygame.time.get_ticks()
+            self.frame_index+=1
+        if self.frame_index> len(self.animation_list[self.action])-1:    
+            if self.attacking:
+                self.attacking=False
+            if self.action == 3: 
+                self.frame_index = len(self.animation_list[self.action]) - 1 
+            else:
+                self.frame_index = 0  
+        self.image=self.animation_list[self.action][self.frame_index]    
+
+    def draw(self, screen, camera_x, camera_y):
+        screen.blit(pygame.transform.flip(self.image, self.flip, False),(self.rect.x + camera_x, self.rect.y + camera_y))
+    
+
+

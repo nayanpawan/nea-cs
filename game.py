@@ -245,9 +245,11 @@ def game():
                     break 
 
     player = Player(spawn_x, spawn_y)
+    marine=Enemies('marine',200,100)
 
 
     all_sprites.add(player)  
+    all_sprites.add(marine)
 
     def draw_healthbar(SCREEN):
         ratio=player.hp/player.max_hp
@@ -281,12 +283,17 @@ def game():
             else:
                 player.update_action(0)
         else:
-            player.update_action(3)       
+            player.update_action(3)   
+
+        marine.update_action(0)        
 
         player.update_animation() 
+        marine.update_animation()
 
         events=pygame.event.get()
         player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE) 
+        marine.patrol(CELL_SIZE)
+        print(marine.flip)
         player.heal()
 
 

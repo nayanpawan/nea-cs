@@ -245,7 +245,7 @@ def game():
                     break 
 
     player = Player(spawn_x, spawn_y)
-    marine=Enemies('marine',200,100)
+    marine=Enemies('marine',50,100)
 
 
     all_sprites.add(player)  
@@ -290,7 +290,7 @@ def game():
 
         events=pygame.event.get()
         player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE) 
-        marine.patrol(CELL_SIZE)
+        marine.patrol(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
         marine.update_animation()
         player.heal()
 

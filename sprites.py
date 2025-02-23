@@ -42,7 +42,7 @@ class Player(pygame.sprite.Sprite):
             temp_list=[]
             frames=len(os.listdir(f'luffy {animation}'))
             for i in range(frames):
-                img=pygame.image.load(f'luffy {animation}/{animation}{i}.png')
+                img=pygame.image.load(f'luffy {animation}/{animation}{i}.png').convert_alpha()
                 original_width, original_height = img.get_size()
                 new_width = int(original_width * (self.scale))
                 new_height = int(original_height * (self.scale))
@@ -186,7 +186,7 @@ class Player(pygame.sprite.Sprite):
 
     def draw(self, screen, camera_x, camera_y):
         screen.blit(pygame.transform.flip(self.image, self.flip, False),(self.rect.x + camera_x, self.rect.y + camera_y))
-
+        #pygame.draw.rect(screen, (255, 0, 0), self.rect.move(camera_x, camera_y), 2) 
 
 class Block(pygame.sprite.Sprite):
     def __init__(self, x, y, cell, CELL_SIZE,a,b,GRID_SIZE):
@@ -227,10 +227,7 @@ class Enemies(pygame.sprite.Sprite):
         self.speed=pygame.math.Vector2(1)
         self.moving_left=False
         self.moving_right=False
-        self.moving_up=False
-        self.moving_down=False
         self.dx=0
-        self.dy=0
 
         self.health=True
         self.max_hp=100
@@ -245,13 +242,14 @@ class Enemies(pygame.sprite.Sprite):
         self.animation_list=[]
         self.frame_index=0
         self.action=0
-        self.scale=1.1
+        self.scale=1.2
         animations=['idle','walking']
         for animation in animations:
             temp_list=[]
             frames=len(os.listdir(f'{self.enemy_type} {animation}'))
             for i in range(frames):
-                img=pygame.image.load(f'{self.enemy_type} {animation}/{animation}{i}.png')
+                img=pygame.image.load(f'{self.enemy_type} {animation}/{animation}{i}.png').convert_alpha()
+                img = img.subsurface(img.get_bounding_rect())
                 original_width, original_height = img.get_size()
                 new_width = int(original_width * (self.scale))
                 new_height = int(original_height * (self.scale))
@@ -262,9 +260,9 @@ class Enemies(pygame.sprite.Sprite):
         self.image=self.animation_list[self.frame_index][0]
         self.rect=self.image.get_rect(topleft=(self.x,self.y)) 
 
-    def patrol(self,CELL_SIZE):
+    def patrol(self,collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
         if self.health:
-            if self.stopped==False and random.randint(1,200)==5:
+            if self.stopped==False and random.randint(1,500)==5:
                     self.stopped=True
                     self.stop_counter=0
             if self.stopped==False:
@@ -275,7 +273,7 @@ class Enemies(pygame.sprite.Sprite):
                     self.moving_left=False
                     self.moving_right=True
 
-                self.movement()
+                self.movement(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
                 self.update_action(1)
                 self.move_counter+=1
 
@@ -283,12 +281,14 @@ class Enemies(pygame.sprite.Sprite):
                     self.direction*=-1
                     self.move_counter*=-1
             else:
+                self.moving_left=False
+                self.moving_right=True
                 self.update_action(0)
                 self.stop_counter+=1
-                if self.stop_counter>50:
+                if self.stop_counter>200:
                     self.stopped=False        
 
-    def movement(self):
+    def movement(self,collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
 
         self.dx=0
         self.dy=0 
@@ -303,18 +303,28 @@ class Enemies(pygame.sprite.Sprite):
             self.flip=True
             self.direction=-1
         
-        if self.moving_up:
-            self.dy=-self.speed.y
-        
-        if self.moving_down:
-            self.dy=self.speed.y
-        
         if self.attacking:
             self.attacking=True     
 
 
         self.rect.x+=self.dx
-        self.rect.y+=self.dy
+        self.handle_collisions(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
+
+    def handle_collisions(self, collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
+        for tile in collideable_terrain:
+            if self.rect.colliderect(tile.rect):  
+                if self.moving_right:
+                    self.rect.x-=self.dx
+                    self.stopped=True
+                    self.direction*=-1
+                if self.moving_left:
+                    self.rect.x-=self.dx
+                    self.stopped=True
+                    self.direction*=-1
+        if self.rect.x<0 or self.rect.x>CELL_SIZE*GRID_SIZE*WORLD_SIZE-self.rect.width:
+            self.rect.x-=self.dx
+        if self.rect.y<0 or self.rect.y>CELL_SIZE*GRID_SIZE*WORLD_SIZE-self.rect.height:
+            self.rect.y-=self.dy    
 
     def update_action(self, new_action):
         if new_action != self.action:
@@ -340,6 +350,6 @@ class Enemies(pygame.sprite.Sprite):
 
     def draw(self, screen, camera_x, camera_y):
         screen.blit(pygame.transform.flip(self.image, self.flip, False),(self.rect.x + camera_x, self.rect.y + camera_y))
-
+        #pygame.draw.rect(screen, (255, 0, 0), self.rect.move(camera_x, camera_y), 2) 
 
 

@@ -243,7 +243,7 @@ class Enemies(pygame.sprite.Sprite):
         self.frame_index=0
         self.action=0
         self.scale=1.2
-        animations=['idle','walking']
+        animations=['idle','walking','attack','dying']
         for animation in animations:
             temp_list=[]
             frames=len(os.listdir(f'{self.enemy_type} {animation}'))
@@ -353,3 +353,23 @@ class Enemies(pygame.sprite.Sprite):
         #pygame.draw.rect(screen, (255, 0, 0), self.rect.move(camera_x, camera_y), 2) 
 
 
+class Attack(pygame.sprite.Sprite):
+    def __init__(self, attack_type,x,y,direction):
+        pygame.sprite.Sprite.__init__(self)
+        if attack_type=='punch':
+            self.image=pygame.image.load('fist.png').convert_alpha()
+        self.speed=1
+        self.rect=self.image.get_rect()
+        self.rect.center=(x,y)
+        self.direction=direction
+        self.start_x=x
+
+    def update(self):
+
+        self.rect.x+=(self.direction*self.speed)    
+
+        if self.start_x-self.rect.x>90 or self.rect.x-self.start_x>90:
+            self.kill()
+
+    def draw(self,screen, camera_x, camera_y):
+        screen.blit(pygame.transform.flip(self.image, False),(self.rect.x + camera_x, self.rect.y + camera_y))       

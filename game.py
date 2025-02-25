@@ -106,7 +106,7 @@ def sign_in_menu():
         pygame.display.update()        
 
 def register_menu():
-    pygame.display.set_caption('Sign In')
+    pygame.display.set_caption('Register')
     SCREEN.fill((0,0,0))
     BG=pygame.image.load("bgs/sign-in-bg.png").convert_alpha()
     BG = pygame.transform.scale(BG, (WIDTH, HEIGHT))
@@ -156,6 +156,7 @@ def register_menu():
                     print(username)
                     print(password)      
         pygame.display.update()         
+
 
 def game():
     
@@ -227,29 +228,69 @@ def game():
     all_terrain_group = pygame.sprite.Group()
     collideable_terrain=pygame.sprite.Group()
     all_sprites=pygame.sprite.Group()
+    enemy_group=pygame.sprite.Group()
+    attack_group=pygame.sprite.Group()
     
     map=generate_world()
     draw_dungeon(map)
 
-    spawn_x, spawn_y = None, None
-    for b in range(WORLD_SIZE):
-        for a in range(WORLD_SIZE):
-            dungeon=map[a][b]
-            for y, row in enumerate(dungeon):
-                for x, cell in enumerate(row):
-                    if cell == 0:  
-                        spawn_x = x * GRID_SIZE
-                        spawn_y = y * GRID_SIZE
-                        break  
-                if spawn_x is not None:
-                    break 
+    def random_spawn():
+        spawn_x, spawn_y = None, None
+        a=random.randint(0,1)
+        b=random.randint(0,1)
+        chunk_x_offset=a*GRID_SIZE*CELL_SIZE
+        chunk_y_offset=b*GRID_SIZE*CELL_SIZE
+        dungeon=map[a][b]
+        spawn_found=False
+        while not spawn_found:
+            x=random.randint(0,GRID_SIZE-1)
+            y=random.randint(0,GRID_SIZE-1)
+            cell=dungeon[x][y]
+            if cell == 0:  
+                spawn_x = x * CELL_SIZE+chunk_x_offset
+                spawn_y = y * CELL_SIZE+chunk_y_offset
+                spawn_found=True
+            else:
+                spawn_found=False 
+        return spawn_x, spawn_y   
 
+    def enemy_random_spawn(num_enemies,enemy_type):
+        for i in range(0,num_enemies):
+            spawn_x, spawn_y = None, None
+            a=random.randint(0,1)
+            b=random.randint(0,1)
+            chunk_x_offset=a*GRID_SIZE*CELL_SIZE
+            chunk_y_offset=b*GRID_SIZE*CELL_SIZE
+            spawn_found=False
+            attempts=0
+            while not spawn_found and attempts<21:
+                attempts+=1
+                x=random.randint(0,GRID_SIZE-1)
+                y=random.randint(0,GRID_SIZE-1)
+                spawn_x = x * CELL_SIZE+chunk_x_offset
+                spawn_y = y * CELL_SIZE+chunk_y_offset
+                enemy=Enemies(enemy_type,spawn_x, spawn_y)
+                collision = False  
+                for block in collideable_terrain:
+                    if enemy.rect.colliderect(block.rect) :
+                        collision = True 
+                        break  
+            
+                if not collision:  
+                    enemy_group.add(enemy)
+                    all_sprites.add(enemy)
+                    spawn_found = True
+                else:
+                    enemy.kill() 
+
+    spawn_x, spawn_y=random_spawn()
     player = Player(spawn_x, spawn_y)
-    marine=Enemies('marine',50,100)
+
+    enemy_random_spawn(5,'marine')
+
 
 
     all_sprites.add(player)  
-    all_sprites.add(marine)
 
     def draw_healthbar(SCREEN):
         ratio=player.hp/player.max_hp
@@ -279,6 +320,10 @@ def game():
             if player.moving_left or player.moving_right or player.moving_up or player.moving_down:
                 player.update_action(1)
             elif player.attacking:
+                punch=Attack('punch',player.rect.centerx+(0.6*player.rect.size[0]*player.direction),player.rect.centery,player.direction)
+                if punch:
+                    print('punch created')
+                all_sprites.add(punch)
                 player.update_action(2)
             else:
                 player.update_action(0)
@@ -287,27 +332,32 @@ def game():
       
 
         player.update_animation() 
+        #punch.update()
 
         events=pygame.event.get()
-        player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE) 
-        marine.patrol(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
-        marine.update_animation()
+        player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
+        for enemy in enemy_group: 
+            enemy.patrol(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
+            enemy.update_animation()
         player.heal()
-
+        
 
         camera_x=-player.rect.x+WIDTH//2
         camera_y=-player.rect.y+HEIGHT//2
 
         for sprite in all_sprites:
-            if (sprite != player) and sprite!= marine:
+            if (sprite != player) and sprite not in enemy_group:
                 SCREEN.blit(sprite.image, (sprite.rect.x + camera_x, sprite.rect.y + camera_y))
 
   
         player.draw(SCREEN,camera_x,camera_y)
-        marine.draw(SCREEN, camera_x,camera_y)
+        for enemy in enemy_group:
+            enemy.draw(SCREEN, camera_x,camera_y)
         draw_healthbar(SCREEN)
         draw_hungerbar(SCREEN)
+        punch.draw(SCREEN, camera_x,camera_y)
         pygame.display.flip()
         clock.tick(FPS)
 
 game()
+#main_menu()

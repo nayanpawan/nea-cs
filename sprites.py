@@ -24,6 +24,8 @@ class Player(pygame.sprite.Sprite):
         self.hp=self.max_hp
         self.max_stamina=100
         self.stamina=self.max_stamina
+        self.can_shoot=False
+        self.shots=2
 
         self.direction=1
         self.flip=False
@@ -31,6 +33,8 @@ class Player(pygame.sprite.Sprite):
         self.in_water=False
         self.water_damage_timer = 0 
         self.heal_timer=0
+        self.last_shot_time = 0  
+        self.shoot_cooldown = 500
 
         self.animation_list=[]
         self.frame_index=0
@@ -79,7 +83,8 @@ class Player(pygame.sprite.Sprite):
                             self.stamina-=2
                             if self.stamina>2:
                                 self.attacking=True
-                        
+                                self.can_shoot=True
+                                
                 
                 
             if event.type==pygame.KEYUP:
@@ -91,6 +96,7 @@ class Player(pygame.sprite.Sprite):
                     self.moving_up=False             
                 if event.key==pygame.K_s:
                     self.moving_down=False 
+        
 
         self.check_terrain(all_terrain_group)
 
@@ -159,7 +165,18 @@ class Player(pygame.sprite.Sprite):
                 self.hp+=5
                 self.stamina-=5
         else:
-            self.heal_timer=0        
+            self.heal_timer=0     
+
+    def shoot(self,attack_group):
+        punch = Attack('punch', self.rect.centerx + self.rect.width * -self.direction, self.rect.centery, -self.direction)
+        attack_group.add(punch)
+
+        self.shots -= 1
+        self.last_shot_time = pygame.time.get_ticks()  
+
+        if self.shots <= 0:
+            self.can_shoot = False  
+            self.shots=2            
 
 
     def update_action(self, new_action):
@@ -182,7 +199,10 @@ class Player(pygame.sprite.Sprite):
                 self.frame_index = len(self.animation_list[self.action]) - 1 
             else:
                 self.frame_index = 0  
-        self.image=self.animation_list[self.action][self.frame_index]    
+        self.image=self.animation_list[self.action][self.frame_index]  
+
+    def can_attack(self):
+        return pygame.time.get_ticks() - self.last_shot_time > self.shoot_cooldown      
 
     def draw(self, screen, camera_x, camera_y):
         screen.blit(pygame.transform.flip(self.image, self.flip, False),(self.rect.x + camera_x, self.rect.y + camera_y))
@@ -231,6 +251,7 @@ class Enemies(pygame.sprite.Sprite):
 
         self.health=True
         self.max_hp=100
+        self.hp=self.max_hp
         self.attacking=False
         self.direction=1
         self.flip=False
@@ -286,7 +307,10 @@ class Enemies(pygame.sprite.Sprite):
                 self.update_action(0)
                 self.stop_counter+=1
                 if self.stop_counter>200:
-                    self.stopped=False        
+                    self.stopped=False    
+
+        if self.hp<=0:
+            self.health=False                
 
     def movement(self,collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
 
@@ -324,7 +348,8 @@ class Enemies(pygame.sprite.Sprite):
         if self.rect.x<0 or self.rect.x>CELL_SIZE*GRID_SIZE*WORLD_SIZE-self.rect.width:
             self.rect.x-=self.dx
         if self.rect.y<0 or self.rect.y>CELL_SIZE*GRID_SIZE*WORLD_SIZE-self.rect.height:
-            self.rect.y-=self.dy    
+            self.rect.y-=self.dy   
+
 
     def update_action(self, new_action):
         if new_action != self.action:
@@ -358,18 +383,32 @@ class Attack(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         if attack_type=='punch':
             self.image=pygame.image.load('fist.png').convert_alpha()
-        self.speed=1
+        self.speed=3
         self.rect=self.image.get_rect()
         self.rect.center=(x,y)
         self.direction=direction
         self.start_x=x
+        self.flip=False
+        if self.direction==1:
+            self.flip=True
 
-    def update(self):
+    def update(self,player,enemy_group,attack_group):
 
-        self.rect.x+=(self.direction*self.speed)    
+        self.rect.x+=(self.direction*self.speed)  
+        if self.rect.x-self.start_x>150 or self.start_x-self.rect.x>150:
+            self.kill()  
+        if pygame.sprite.spritecollide(player,attack_group,False):
+            if player.health:
+                player.hp-=5
+                self.kill()
+        for enemy in enemy_group:
+            if pygame.sprite.spritecollide(enemy,attack_group,False):
+                if enemy.health:
+                    enemy.health-=20
+                    self.kill()        
 
-        if self.start_x-self.rect.x>90 or self.rect.x-self.start_x>90:
-            self.kill()
 
+ 
     def draw(self,screen, camera_x, camera_y):
-        screen.blit(pygame.transform.flip(self.image, False),(self.rect.x + camera_x, self.rect.y + camera_y))       
+        screen.blit(pygame.transform.flip(self.image, self.flip, False),(self.rect.x + camera_x, self.rect.y + camera_y))     
+        #pygame.draw.rect(screen, (255, 0, 0), self.rect.move(camera_x, camera_y), 2) 

@@ -308,7 +308,6 @@ def game():
 
     while running:
 
-
         SCREEN.fill(BG)
 
         if player.hp>0:
@@ -319,11 +318,9 @@ def game():
         if player.health:
             if player.moving_left or player.moving_right or player.moving_up or player.moving_down:
                 player.update_action(1)
-            elif player.attacking:
-                punch=Attack('punch',player.rect.centerx+(0.6*player.rect.size[0]*player.direction),player.rect.centery,player.direction)
-                if punch:
-                    print('punch created')
-                all_sprites.add(punch)
+            elif player.can_shoot and player.can_attack():
+                player.shoot(attack_group)    
+            elif player.attacking:     
                 player.update_action(2)
             else:
                 player.update_action(0)
@@ -332,7 +329,9 @@ def game():
       
 
         player.update_animation() 
-        #punch.update()
+        for attack in attack_group:
+            attack.update(player,enemy_group,attack_group)
+        
 
         events=pygame.event.get()
         player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
@@ -353,9 +352,10 @@ def game():
         player.draw(SCREEN,camera_x,camera_y)
         for enemy in enemy_group:
             enemy.draw(SCREEN, camera_x,camera_y)
+        for attack in attack_group:
+            attack.draw(SCREEN,camera_x,camera_y)    
         draw_healthbar(SCREEN)
         draw_hungerbar(SCREEN)
-        punch.draw(SCREEN, camera_x,camera_y)
         pygame.display.flip()
         clock.tick(FPS)
 

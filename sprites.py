@@ -250,7 +250,7 @@ class Enemies(pygame.sprite.Sprite):
         self.dx=0
 
         self.health=True
-        self.max_hp=100
+        self.max_hp=40
         self.hp=self.max_hp
         self.attacking=False
         self.direction=1
@@ -259,6 +259,8 @@ class Enemies(pygame.sprite.Sprite):
         self.move_counter=0
         self.stopped=False
         self.stop_counter=0
+        self.death_counter=2160
+        self.death_time=0
 
         self.animation_list=[]
         self.frame_index=0
@@ -310,8 +312,16 @@ class Enemies(pygame.sprite.Sprite):
                     self.stopped=False    
 
         if self.hp<=0:
-            self.health=False                
+            if self.death_time ==0:  
+                self.death_time = pygame.time.get_ticks()
+            
+            self.health=False  
+            self.update_action(3)
+            self.update_animation()
+            if pygame.time.get_ticks()-self.death_time>self.death_counter:
+                self.kill()
 
+        
     def movement(self,collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
 
         self.dx=0
@@ -328,7 +338,7 @@ class Enemies(pygame.sprite.Sprite):
             self.direction=-1
         
         if self.attacking:
-            self.attacking=True     
+            self.attacking=True  
 
 
         self.rect.x+=self.dx
@@ -404,7 +414,7 @@ class Attack(pygame.sprite.Sprite):
         for enemy in enemy_group:
             if pygame.sprite.spritecollide(enemy,attack_group,False):
                 if enemy.health:
-                    enemy.health-=20
+                    enemy.hp-=20
                     self.kill()        
 
 

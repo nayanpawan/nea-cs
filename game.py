@@ -272,7 +272,7 @@ def game():
                 enemy=Enemies(enemy_type,spawn_x, spawn_y)
                 collision = False  
                 for block in collideable_terrain:
-                    if enemy.rect.colliderect(block.rect) :
+                    if enemy.rect.colliderect(block.rect) or block.cell==3 :
                         collision = True 
                         break  
             

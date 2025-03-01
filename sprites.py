@@ -24,8 +24,6 @@ class Player(pygame.sprite.Sprite):
         self.hp=self.max_hp
         self.max_stamina=100
         self.stamina=self.max_stamina
-        self.can_shoot=False
-        self.shots=2
 
         self.direction=1
         self.flip=False
@@ -35,6 +33,8 @@ class Player(pygame.sprite.Sprite):
         self.heal_timer=0
         self.last_shot_time = 0  
         self.shoot_cooldown = 500
+        self.can_shoot=False
+        self.shots=2
 
         self.animation_list=[]
         self.frame_index=0
@@ -262,6 +262,13 @@ class Enemies(pygame.sprite.Sprite):
         self.death_counter=2160
         self.death_time=0
 
+        self.last_shot_time = 0  
+        self.shoot_cooldown = 700
+        self.shots=1
+
+        self.attack_type='sword'
+        self.attacking=False
+
         self.animation_list=[]
         self.frame_index=0
         self.action=0
@@ -283,33 +290,47 @@ class Enemies(pygame.sprite.Sprite):
         self.image=self.animation_list[self.frame_index][0]
         self.rect=self.image.get_rect(topleft=(self.x,self.y)) 
 
-    def patrol(self,collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
+        self.vision=pygame.Rect(0,0,140,self.rect.size[1])
+
+    def patrol(self,collideable_terrain, player, attack_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
         if self.health:
-            if self.stopped==False and random.randint(1,500)==5:
-                    self.stopped=True
-                    self.stop_counter=0
-            if self.stopped==False:
-                if self.direction==1 :
-                    self.moving_left=True
-                    self.moving_right=False
-                else:
-                    self.moving_left=False
-                    self.moving_right=True
-
-                self.movement(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
-                self.update_action(1)
-                self.move_counter+=1
-
-                if self.move_counter>CELL_SIZE*4:
-                    self.direction*=-1
-                    self.move_counter*=-1
+            if self.vision.colliderect(player.rect):
+                self.attacking=True
+                if self.can_attack():
+                    self.shots=1
             else:
-                self.moving_left=False
-                self.moving_right=True
-                self.update_action(0)
-                self.stop_counter+=1
-                if self.stop_counter>200:
-                    self.stopped=False    
+                self.attacking=False        
+            if not self.attacking:
+                        if self.stopped==False and random.randint(1,500)==5:
+                                self.stopped=True
+                                self.stop_counter=0
+                        if self.stopped==False:
+                            if self.direction==1 :
+                                self.moving_left=True
+                                self.moving_right=False
+                            else:
+                                self.moving_left=False
+                                self.moving_right=True
+
+                            self.movement(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
+                            self.update_action(1)
+                            self.move_counter+=1
+
+                            if self.move_counter>CELL_SIZE*4:
+                                self.direction*=-1
+                                self.move_counter*=-1
+                        else:
+                            self.moving_left=False
+                            self.moving_right=True
+                            self.update_action(0)
+                            self.stop_counter+=1
+                            if self.stop_counter>200:
+                                self.stopped=False  
+            else:
+                self.update_action(2)
+                self.update_animation()
+                if self.shots>0:
+                    self.shoot(attack_group)
 
         if self.hp<=0:
             if self.death_time ==0:  
@@ -343,6 +364,7 @@ class Enemies(pygame.sprite.Sprite):
 
         self.rect.x+=self.dx
         self.handle_collisions(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
+        self.vision.center=(self.rect.centerx+0.5*self.rect.size[0]*-self.direction,self.rect.centery)
 
     def handle_collisions(self, collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
         for tile in collideable_terrain:
@@ -360,6 +382,17 @@ class Enemies(pygame.sprite.Sprite):
         if self.rect.y<0 or self.rect.y>CELL_SIZE*GRID_SIZE*WORLD_SIZE-self.rect.height:
             self.rect.y-=self.dy   
 
+    def shoot(self,attack_group):
+        attack = Attack(self.attack_type, self.rect.centerx + self.rect.width * -self.direction, self.rect.centery, -self.direction)
+        attack_group.add(attack)
+
+        self.last_shot_time = pygame.time.get_ticks() 
+        self.shots-=1
+
+    
+
+    def can_attack(self):
+        return pygame.time.get_ticks() - self.last_shot_time > self.shoot_cooldown           
 
     def update_action(self, new_action):
         if new_action != self.action:
@@ -386,13 +419,14 @@ class Enemies(pygame.sprite.Sprite):
     def draw(self, screen, camera_x, camera_y):
         screen.blit(pygame.transform.flip(self.image, self.flip, False),(self.rect.x + camera_x, self.rect.y + camera_y))
         #pygame.draw.rect(screen, (255, 0, 0), self.rect.move(camera_x, camera_y), 2) 
+        pygame.draw.rect(screen, (255, 0, 0), self.vision.move(camera_x, camera_y), 2) 
 
 
 class Attack(pygame.sprite.Sprite):
     def __init__(self, attack_type,x,y,direction):
         pygame.sprite.Sprite.__init__(self)
-        if attack_type=='punch':
-            self.image=pygame.image.load('fist.png').convert_alpha()
+        # if attack_type=='punch':
+        self.image=pygame.image.load('fist.png').convert_alpha()
         self.speed=3
         self.rect=self.image.get_rect()
         self.rect.center=(x,y)

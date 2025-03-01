@@ -336,7 +336,7 @@ def game():
         events=pygame.event.get()
         player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
         for enemy in enemy_group: 
-            enemy.patrol(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
+            enemy.patrol(collideable_terrain, player,attack_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
             enemy.update_animation()
         player.heal()
         

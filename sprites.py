@@ -35,6 +35,7 @@ class Player(pygame.sprite.Sprite):
         self.shoot_cooldown = 500
         self.can_shoot=False
         self.shots=2
+        self.attack_type='fist'
 
         self.animation_list=[]
         self.frame_index=0
@@ -168,7 +169,7 @@ class Player(pygame.sprite.Sprite):
             self.heal_timer=0     
 
     def shoot(self,attack_group):
-        punch = Attack('punch', self.rect.centerx + self.rect.width * -self.direction, self.rect.centery, -self.direction)
+        punch = Attack(self.attack_type, self.rect.centerx + self.rect.width * -self.direction, self.rect.centery, -self.direction)
         attack_group.add(punch)
 
         self.shots -= 1
@@ -263,10 +264,10 @@ class Enemies(pygame.sprite.Sprite):
         self.death_time=0
 
         self.last_shot_time = 0  
-        self.shoot_cooldown = 700
+        self.shoot_cooldown = 900
         self.shots=1
 
-        self.attack_type='sword'
+        self.attack_type='slash'
         self.attacking=False
 
         self.animation_list=[]
@@ -383,7 +384,7 @@ class Enemies(pygame.sprite.Sprite):
             self.rect.y-=self.dy   
 
     def shoot(self,attack_group):
-        attack = Attack(self.attack_type, self.rect.centerx + self.rect.width * -self.direction, self.rect.centery, -self.direction)
+        attack = Attack(self.attack_type, self.rect.centerx + 1.1*self.rect.width * -self.direction, self.rect.centery, -self.direction)
         attack_group.add(attack)
 
         self.last_shot_time = pygame.time.get_ticks() 
@@ -419,14 +420,13 @@ class Enemies(pygame.sprite.Sprite):
     def draw(self, screen, camera_x, camera_y):
         screen.blit(pygame.transform.flip(self.image, self.flip, False),(self.rect.x + camera_x, self.rect.y + camera_y))
         #pygame.draw.rect(screen, (255, 0, 0), self.rect.move(camera_x, camera_y), 2) 
-        pygame.draw.rect(screen, (255, 0, 0), self.vision.move(camera_x, camera_y), 2) 
+        #pygame.draw.rect(screen, (255, 0, 0), self.vision.move(camera_x, camera_y), 2) 
 
 
 class Attack(pygame.sprite.Sprite):
     def __init__(self, attack_type,x,y,direction):
         pygame.sprite.Sprite.__init__(self)
-        # if attack_type=='punch':
-        self.image=pygame.image.load('fist.png').convert_alpha()
+        self.image=pygame.image.load(f'{attack_type}.png').convert_alpha()
         self.speed=3
         self.rect=self.image.get_rect()
         self.rect.center=(x,y)
@@ -440,19 +440,22 @@ class Attack(pygame.sprite.Sprite):
 
         self.rect.x+=(self.direction*self.speed)  
         if self.rect.x-self.start_x>150 or self.start_x-self.rect.x>150:
-            self.kill()  
+            self.kill()
+            self.remove(attack_group)  
         if pygame.sprite.spritecollide(player,attack_group,False):
             if player.health:
                 player.hp-=5
                 self.kill()
+                self.remove(attack_group)
         for enemy in enemy_group:
             if pygame.sprite.spritecollide(enemy,attack_group,False):
                 if enemy.health:
                     enemy.hp-=20
-                    self.kill()        
+                    self.kill()
+                    self.remove(attack_group)     
 
 
  
     def draw(self,screen, camera_x, camera_y):
         screen.blit(pygame.transform.flip(self.image, self.flip, False),(self.rect.x + camera_x, self.rect.y + camera_y))     
-        #pygame.draw.rect(screen, (255, 0, 0), self.rect.move(camera_x, camera_y), 2) 
+        pygame.draw.rect(screen, (255, 0, 0), self.rect.move(camera_x, camera_y), 2) 

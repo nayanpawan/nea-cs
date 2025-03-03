@@ -286,11 +286,12 @@ def game():
     spawn_x, spawn_y=random_spawn()
     player = Player(spawn_x, spawn_y)
 
-    enemy_random_spawn(5,'marine')
+    enemy_random_spawn(1,'marine')
 
 
 
-    all_sprites.add(player)  
+    all_sprites.add(player) 
+    enemy_num=None
 
     def draw_healthbar(SCREEN):
         ratio=player.hp/player.max_hp
@@ -338,6 +339,8 @@ def game():
         for enemy in enemy_group: 
             enemy.patrol(collideable_terrain, player,attack_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
             enemy.update_animation()
+            if not enemy_group:
+                enemy_num=0
         player.heal()
         
 
@@ -358,6 +361,12 @@ def game():
         draw_hungerbar(SCREEN)
         pygame.display.flip()
         clock.tick(FPS)
+        if enemy_num==0:
+            SCREEN.fill((255,255,255))
+            font = pygame.font.Font(None, 60)  # Default font, size 60
+            text = font.render("Congrats! Level 1 Cleared", True, (0,0,0))
+            text_rect = text.get_rect(center=(WIDTH//2, HEIGHT//2))
+            SCREEN.blit(text, text_rect)
 
 game()
 #main_menu()

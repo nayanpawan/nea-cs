@@ -3,6 +3,7 @@ import sys
 from perlin_noise import PerlinNoise
 from sprites import *
 import random
+from generation import*
 
 
 
@@ -15,7 +16,6 @@ SCREEN=pygame.display.set_mode((WIDTH, HEIGHT))
 
 FPS=60
 clock=pygame.time.Clock()
-
 
 
 def main_menu():
@@ -171,59 +171,10 @@ def game():
     camera_x=0
     camera_y=0
 
-    map=[]
-
-
-    def generate_dungeon():
-        seed=random.randint(0,10000)
-        noise1=PerlinNoise(2,seed)
-        noise2=PerlinNoise(4,seed)
-        noise3=PerlinNoise(8,seed)
-        dungeon=[]
-        for y in range (GRID_SIZE):
-            row=[]
-            for x in range (GRID_SIZE):
-                tile=noise1((x/GRID_SIZE, y/GRID_SIZE))
-                tile+=noise2((x/GRID_SIZE, y/GRID_SIZE))*0.5
-                tile+=noise3((x/GRID_SIZE, y/GRID_SIZE))*0.25
-                if tile>-0.2 and tile<0.15 or tile>0.45 and tile<0.6:
-                    row.append(0)#ground
-                elif tile<-0.4:
-                    row.append(2)#snow
-                elif tile>0.2 and tile<0.45:
-                    row.append(3)#water  
-                elif tile>0.15 and tile<0.2:
-                    row.append(4)  #sand
-                elif tile<-0.2 and tile>-0.4 or tile>0.6:
-                    row.append(1)#stone   
-            dungeon.append(row) 
-        return dungeon 
-
-    def generate_world():
-        for y in range(WORLD_SIZE):
-            row=[]
-            for x in range(WORLD_SIZE):
-                row.append(generate_dungeon())
-            map.append(row) 
-        return map    
-    
-    map=generate_world()
-
-    
-    
-    def draw_dungeon(map):
-        for b in range(WORLD_SIZE):
-            for a in range(WORLD_SIZE):
-                dungeon=map[a][b]
-                for y, row in enumerate(dungeon):
-                    for x, cell in enumerate(row):
-                        terrain=Block(x,y,cell,CELL_SIZE,a,b,GRID_SIZE)
-                        all_terrain_group.add(terrain)
-                        all_sprites.add(terrain)
-
-                        if cell==1 or cell==2 :
-                            collideable_terrain.add(terrain)
-
+    world=[]
+    level=1
+    global bounty
+    bounty=0
 
     all_terrain_group = pygame.sprite.Group()
     collideable_terrain=pygame.sprite.Group()
@@ -231,81 +182,34 @@ def game():
     enemy_group=pygame.sprite.Group()
     attack_group=pygame.sprite.Group()
     
-    map=generate_world()
-    draw_dungeon(map)
+    def next_level():
+        nonlocal level, enemy_num, world, all_terrain_group, collideable_terrain, all_sprites, enemy_group, attack_group, player
+        for sprite in all_sprites:
+            sprite.kill()
+        level+=1    
+        world=generate_world(world)
+        draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain)
 
-    def random_spawn():
-        spawn_x, spawn_y = None, None
-        a=random.randint(0,1)
-        b=random.randint(0,1)
-        chunk_x_offset=a*GRID_SIZE*CELL_SIZE
-        chunk_y_offset=b*GRID_SIZE*CELL_SIZE
-        dungeon=map[a][b]
-        spawn_found=False
-        while not spawn_found:
-            x=random.randint(0,GRID_SIZE-1)
-            y=random.randint(0,GRID_SIZE-1)
-            cell=dungeon[x][y]
-            if cell == 0:  
-                spawn_x = x * CELL_SIZE+chunk_x_offset
-                spawn_y = y * CELL_SIZE+chunk_y_offset
-                spawn_found=True
-            else:
-                spawn_found=False 
-        return spawn_x, spawn_y   
+        spawn_x, spawn_y=random_spawn(world)
+        player = Player(spawn_x, spawn_y)
 
-    def enemy_random_spawn(num_enemies,enemy_type):
-        for i in range(0,num_enemies):
-            spawn_x, spawn_y = None, None
-            a=random.randint(0,1)
-            b=random.randint(0,1)
-            chunk_x_offset=a*GRID_SIZE*CELL_SIZE
-            chunk_y_offset=b*GRID_SIZE*CELL_SIZE
-            spawn_found=False
-            attempts=0
-            while not spawn_found and attempts<21:
-                attempts+=1
-                x=random.randint(0,GRID_SIZE-1)
-                y=random.randint(0,GRID_SIZE-1)
-                spawn_x = x * CELL_SIZE+chunk_x_offset
-                spawn_y = y * CELL_SIZE+chunk_y_offset
-                enemy=Enemies(enemy_type,spawn_x, spawn_y)
-                collision = False  
-                for block in collideable_terrain:
-                    if enemy.rect.colliderect(block.rect) or block.cell==3 :
-                        collision = True 
-                        break  
-            
-                if not collision:  
-                    enemy_group.add(enemy)
-                    all_sprites.add(enemy)
-                    spawn_found = True
-                else:
-                    enemy.kill() 
+        enemy_random_spawn(level,'marine',collideable_terrain,enemy_group,all_sprites)
+        if level%10==0:
+            boss_random_spawn(level,'morgan',collideable_terrain,enemy_group,all_sprites)
+        enemy_num=len(enemy_group)
+        all_sprites.add(player) 
 
-    spawn_x, spawn_y=random_spawn()
+
+    world=generate_world(world)
+    draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain)
+
+    spawn_x, spawn_y=random_spawn(world)
     player = Player(spawn_x, spawn_y)
 
-    enemy_random_spawn(1,'marine')
-
-
+    enemy_random_spawn(level,'marine',collideable_terrain,enemy_group,all_sprites)
 
     all_sprites.add(player) 
-    enemy_num=None
-
-    def draw_healthbar(SCREEN):
-        ratio=player.hp/player.max_hp
-        pygame.draw.rect(SCREEN,(0,0,0),(10, 10, 300, 40))
-        pygame.draw.rect(SCREEN,(255,0,0),(10, 10, 295, 35))
-        pygame.draw.rect(SCREEN,(0,255,0),(10, 10, ratio*295, 35)) 
-
-    def draw_hungerbar(SCREEN):
-        ratio=player.stamina/player.max_stamina
-        pygame.draw.rect(SCREEN,(0,0,0),(10, 60, 300, 40))
-        pygame.draw.rect(SCREEN,(211,211,211),(10, 60, 295, 35))
-        pygame.draw.rect(SCREEN,(128,84,47),(10, 60, ratio*295, 35))     
-
-
+    enemy_num=len(enemy_group)
 
     while running:
 
@@ -327,6 +231,7 @@ def game():
                 player.update_action(0)
         else:
             player.update_action(3)   
+            running=False
       
 
         player.update_animation() 
@@ -338,6 +243,8 @@ def game():
         player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
         for enemy in enemy_group: 
             enemy.patrol(collideable_terrain, player,attack_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
+            if not enemy.health:
+                bounty+=100
             enemy.update_animation()
             if not enemy_group:
                 enemy_num=0
@@ -357,16 +264,19 @@ def game():
             enemy.draw(SCREEN, camera_x,camera_y)
         for attack in attack_group:
             attack.draw(SCREEN,camera_x,camera_y)    
-        draw_healthbar(SCREEN)
-        draw_hungerbar(SCREEN)
+        draw_healthbar(SCREEN,player)
+        draw_hungerbar(SCREEN,player)
+        if enemy_num==0:
+            font = pygame.font.Font(None, 60) 
+            text = font.render(f"Congrats! Level {level} Cleared", True, (255,215,0))
+            text_rect = text.get_rect(center=(WIDTH//2, HEIGHT//2))
+            SCREEN.blit(text, text_rect) 
+            pygame.display.flip()
+            pygame.time.delay(2000)
+            next_level() 
         pygame.display.flip()
         clock.tick(FPS)
-        if enemy_num==0:
-            SCREEN.fill((255,255,255))
-            font = pygame.font.Font(None, 60)  # Default font, size 60
-            text = font.render("Congrats! Level 1 Cleared", True, (0,0,0))
-            text_rect = text.get_rect(center=(WIDTH//2, HEIGHT//2))
-            SCREEN.blit(text, text_rect)
 
 game()
+print(bounty)
 #main_menu()

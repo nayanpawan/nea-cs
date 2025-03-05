@@ -36,6 +36,7 @@ class Player(pygame.sprite.Sprite):
         self.can_shoot=False
         self.shots=2
         self.attack_type='fist'
+        self.consumable=False
 
         self.animation_list=[]
         self.frame_index=0
@@ -63,7 +64,6 @@ class Player(pygame.sprite.Sprite):
 
         self.dx=0
         self.dy=0 
-
         for event in events:
             if event.type==pygame.QUIT:
                 pygame.quit()
@@ -149,7 +149,7 @@ class Player(pygame.sprite.Sprite):
                     self.in_water=True
                     self.speed=pygame.math.Vector2(2)
                 else:
-                    self.speed=pygame.math.Vector2(4)  
+                    self.speed=pygame.math.Vector2(4)   
 
         if self.in_water:
             self.water_damage_timer += 1
@@ -158,15 +158,30 @@ class Player(pygame.sprite.Sprite):
         else:
             self.speed = pygame.math.Vector2(4)   
             self.water_damage_timer = 0                  
+       
 
-    def heal(self):
+    def heal(self,all_terrain_group,events):
         if self.hp<100 and self.stamina>40 and self.health:
             self.heal_timer+=1
             if self.heal_timer % 120==0:
                 self.hp+=5
                 self.stamina-=5
         else:
-            self.heal_timer=0     
+            self.heal_timer=0  
+        for block in all_terrain_group:
+            if self.rect.colliderect(block.rect):
+                for event in events:
+                    if event.type==pygame.KEYDOWN:
+                        if event.key==pygame.K_LSHIFT:
+                            if block.cell==5 and self.stamina<self.max_stamina:
+                                self.stamina = min(self.stamina + 15, self.max_stamina)
+                                block.cell=0
+                                block.image.fill((86,125,70))
+                            elif block.cell==6 and self.hp<self.max_hp:
+                                self.hp = min(self.hp + 15, self.max_hp)
+                                block.cell=0
+                                block.image.fill((86,125,70))
+                                
 
     def shoot(self,attack_group):
         punch = Attack(self,self.attack_type, self.rect.centerx + self.rect.width * -self.direction, self.rect.centery, -self.direction)
@@ -228,7 +243,15 @@ class Block(pygame.sprite.Sprite):
         elif cell==4:
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE))  
             self.image.fill((248,240,164))
-            self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)    
+            self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+        elif cell==5:
+            self.image = pygame.Surface((CELL_SIZE, CELL_SIZE))  
+            self.image.fill((181,101,29))
+            self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+        elif cell==6:
+            self.image = pygame.Surface((CELL_SIZE, CELL_SIZE))  
+            self.image.fill((255,0,0))
+            self.rect=pygame.Rect(a*GRID_SIZE*CELL_SIZE+x * CELL_SIZE,b*GRID_SIZE*CELL_SIZE+ y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
         else:
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE))  
             self.image.fill((86,125,70))

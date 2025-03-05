@@ -181,14 +181,15 @@ def game():
     all_sprites=pygame.sprite.Group()
     enemy_group=pygame.sprite.Group()
     attack_group=pygame.sprite.Group()
+    consumable_group=pygame.sprite.Group()
     
     def next_level():
         nonlocal level, enemy_num, world, all_terrain_group, collideable_terrain, all_sprites, enemy_group, attack_group, player
         for sprite in all_sprites:
             sprite.kill()
         level+=1    
-        world=generate_world(world)
-        draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain)
+        world=generate_world(world,level)
+        draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain,consumable_group)
 
         spawn_x, spawn_y=random_spawn(world)
         player = Player(spawn_x, spawn_y)
@@ -200,8 +201,8 @@ def game():
         all_sprites.add(player) 
 
 
-    world=generate_world(world)
-    draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain)
+    world=generate_world(world,level)
+    draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain,consumable_group)
 
     spawn_x, spawn_y=random_spawn(world)
     player = Player(spawn_x, spawn_y)
@@ -248,7 +249,7 @@ def game():
             enemy.update_animation()
             if not enemy_group:
                 enemy_num=0
-        player.heal()
+        player.heal(all_terrain_group,events)
         
 
         camera_x=-player.rect.x+WIDTH//2

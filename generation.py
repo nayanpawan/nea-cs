@@ -9,7 +9,7 @@ WORLD_SIZE=2
 GRID_SIZE = 60
 CELL_SIZE = WIDTH // GRID_SIZE
 
-def generate_dungeon():
+def generate_dungeon(level):
         seed=random.randint(0,10000)
         noise1=PerlinNoise(2,seed)
         noise2=PerlinNoise(4,seed)
@@ -22,7 +22,14 @@ def generate_dungeon():
                 tile+=noise2((x/GRID_SIZE, y/GRID_SIZE))*0.5
                 tile+=noise3((x/GRID_SIZE, y/GRID_SIZE))*0.25
                 if tile>-0.2 and tile<0.15 or tile>0.45 and tile<0.6:
-                    row.append(0)#ground
+                    spawn_chance = max(3000 - (level * 50), 500)
+                    if random.randint(1,spawn_chance)==2:
+                        if random.randint(1,2)==1:
+                             row.append(5)#food
+                        else:
+                             row.append(6)#medkit
+                    else:          
+                        row.append(0)#ground
                 elif tile<-0.4:
                     row.append(2)#snow
                 elif tile>0.2 and tile<0.45:
@@ -34,16 +41,16 @@ def generate_dungeon():
             dungeon.append(row) 
         return dungeon 
 
-def generate_world(world):
+def generate_world(world,level):
         for y in range(WORLD_SIZE):
             row=[]
             for x in range(WORLD_SIZE):
-                row.append(generate_dungeon())
+                row.append(generate_dungeon(level))
             world.append(row) 
         return world    
     
     
-def draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain):
+def draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain,consumable_group):
         for b in range(WORLD_SIZE):
             for a in range(WORLD_SIZE):
                 dungeon=world[a][b]
@@ -55,6 +62,9 @@ def draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain):
 
                         if cell==1 or cell==2 :
                             collideable_terrain.add(terrain)
+                        elif cell==5 or cell==6:
+                             consumable_group.add(terrain)
+
 
 def random_spawn(world):
         spawn_x, spawn_y = None, None

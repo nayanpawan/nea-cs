@@ -6,12 +6,14 @@ pygame.init()
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
+        ##inheritng sprite group##
+        ##can add to sprite group beacuse of this##
         pygame.sprite.Sprite.__init__(self)
         self.update_time=pygame.time.get_ticks()
 
         self.x=x
         self.y=y
-        self.speed=pygame.math.Vector2(4)
+        self.speed=pygame.math.Vector2(6)
         self.moving_left=False
         self.moving_right=False
         self.moving_up=False
@@ -33,16 +35,20 @@ class Player(pygame.sprite.Sprite):
         self.heal_timer=0
         self.last_shot_time = 0  
         self.shoot_cooldown = 500
+        self.last_haki_time = 0  
+        self.haki_cooldown = 20000
         self.can_shoot=False
         self.shots=2
         self.attack_type='fist'
         self.consumable=False
+        self.damage=0
 
         self.animation_list=[]
         self.frame_index=0
         self.action=0
         self.scale=0.7
-
+        ##this is how animations is handled##
+        ##all frames are loaded then only the ones needed are drawn##
         animations=['idle', 'walking', 'attack','dying']
         for animation in animations:
             temp_list=[]
@@ -60,10 +66,16 @@ class Player(pygame.sprite.Sprite):
         self.rect=self.image.get_rect(topleft=(self.x,self.y))    
 
 
-    def movement(self, events, collideable_terrain, all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
+    def movement(self, events, collideable_terrain, all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE,keybinds):
 
         self.dx=0
         self.dy=0 
+        ##this is where the cahnged keybinds is put in use##
+        key_up = pygame.key.key_code(keybinds[0])
+        key_down = pygame.key.key_code(keybinds[2])
+        key_left = pygame.key.key_code(keybinds[1])
+        key_right = pygame.key.key_code(keybinds[3])
+        key_attack = pygame.key.key_code(keybinds[4])
         for event in events:
             if event.type==pygame.QUIT:
                 pygame.quit()
@@ -71,31 +83,31 @@ class Player(pygame.sprite.Sprite):
             if self.health:    
 
                 if event.type==pygame.KEYDOWN:
-                    if event.key==pygame.K_d:
+                    if event.key==key_right:
                         self.moving_right=True
-                    if event.key==pygame.K_a:
+                    if event.key==key_left:
                         self.moving_left=True
-                    if event.key==pygame.K_w:
+                    if event.key==key_up:
                         self.moving_up=True
-                    if event.key==pygame.K_s:
+                    if event.key==key_down:
                         self.moving_down=True
-                    if event.key==pygame.K_k:
+                    if event.key==key_attack:
                         if not self.attacking:
                             self.stamina-=2
                             if self.stamina>2:
                                 self.attacking=True
-                                self.can_shoot=True
+                                self.can_shoot=True          
                                 
                 
                 
             if event.type==pygame.KEYUP:
-                if event.key==pygame.K_d:
+                if event.key==key_right:
                     self.moving_right=False
-                if event.key==pygame.K_a:
+                if event.key==key_left:
                     self.moving_left=False
-                if event.key==pygame.K_w:
+                if event.key==key_up:
                     self.moving_up=False             
-                if event.key==pygame.K_s:
+                if event.key==key_down:
                     self.moving_down=False 
         
 
@@ -118,7 +130,7 @@ class Player(pygame.sprite.Sprite):
             self.dy=self.speed.y
              
 
-
+##checking collisions with an another method##
         self.rect.x+=self.dx
         self.handle_collisions(collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE)
         self.rect.y+=self.dy
@@ -127,6 +139,7 @@ class Player(pygame.sprite.Sprite):
 
     def handle_collisions(self, collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
         for tile in collideable_terrain:
+            ##cehcking collisions with collideable block##
             if self.rect.colliderect(tile.rect):  
                 if self.moving_right:
                     self.rect.x-=self.dx
@@ -159,6 +172,14 @@ class Player(pygame.sprite.Sprite):
             self.speed = pygame.math.Vector2(4)   
             self.water_damage_timer = 0                  
        
+    def haki_attack(self, enemy_group):
+        ##haki attack with a cooldown##
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_haki_time >= self.haki_cooldown:
+            for enemy in enemy_group:
+                if abs(enemy.rect.x - self.rect.x) < 500 and abs(enemy.rect.y - self.rect.y) < 500:
+                    enemy.hp-=50
+                    self.last_haki_time=current_time
 
     def heal(self,all_terrain_group,events):
         if self.hp<100 and self.stamina>40 and self.health:
@@ -184,6 +205,7 @@ class Player(pygame.sprite.Sprite):
                                 
 
     def shoot(self,attack_group):
+        ##creating an instance of attack class when attacking##
         punch = Attack(self,self.attack_type, self.rect.centerx + self.rect.width * -self.direction, self.rect.centery, -self.direction)
         attack_group.add(punch)
 
@@ -205,6 +227,7 @@ class Player(pygame.sprite.Sprite):
     
     def update_animation(self):
         ANIMATION_COOLDOWN=125
+        ##frames recycled unless ne animation is called##
         if pygame.time.get_ticks()-self.update_time>ANIMATION_COOLDOWN:
             self.update_time=pygame.time.get_ticks()
             self.frame_index+=1
@@ -227,6 +250,7 @@ class Player(pygame.sprite.Sprite):
 class Block(pygame.sprite.Sprite):
     def __init__(self, x, y, cell, CELL_SIZE,a,b,GRID_SIZE):
         pygame.sprite.Sprite.__init__(self)
+        ##block class initailisation##
         self.cell=cell
         if cell==1:
             self.image = pygame.Surface((CELL_SIZE, CELL_SIZE)) 
@@ -263,6 +287,7 @@ class Enemies(pygame.sprite.Sprite):
     def __init__(self, enemy_type, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.update_time=pygame.time.get_ticks()
+        ##enemy class initialistion##
 
         self.enemy_type=enemy_type
         self.x=x
@@ -274,6 +299,7 @@ class Enemies(pygame.sprite.Sprite):
         self.dx=0
 
         self.health=True
+        ##depending on enemy type health and damage is diffrent##
         if self.enemy_type=='marine':
             self.hp=40
             self.damage=5
@@ -301,6 +327,7 @@ class Enemies(pygame.sprite.Sprite):
         self.frame_index=0
         self.action=0
         self.scale=1.2
+        ##similar way the animation for enmies is handled##
         animations=['idle','walking','attack','dying']
         for animation in animations:
             temp_list=[]
@@ -317,18 +344,20 @@ class Enemies(pygame.sprite.Sprite):
 
         self.image=self.animation_list[self.frame_index][0]
         self.rect=self.image.get_rect(topleft=(self.x,self.y)) 
-
+##vision for enemy if player collides witht this rect enemy attacks##
         self.vision=pygame.Rect(0,0,140,self.rect.size[1])
 
     def patrol(self,collideable_terrain, player, attack_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
         if self.hp>0:
             if self.vision.colliderect(player.rect):
+                ##attacks if player in vision##
                 self.attacking=True
                 if self.can_attack():
                     self.shots=1
             else:
                 self.attacking=False        
             if not self.attacking:
+                        ##random patrolling randomly stoping and walking back and forth##
                         if self.stopped==False and random.randint(1,500)==5:
                                 self.stopped=True
                                 self.stop_counter=0
@@ -358,6 +387,7 @@ class Enemies(pygame.sprite.Sprite):
                 self.update_action(2)
                 self.update_animation()
                 if self.shots>0:
+                    ##limit the number of attacks per attack cycle##
                     self.shoot(attack_group)
 
         if self.hp<=0:
@@ -367,6 +397,7 @@ class Enemies(pygame.sprite.Sprite):
             self.update_action(3)
             self.update_animation()
             if pygame.time.get_ticks()-self.death_time>self.death_counter:
+                ##enemy lies on ground then is removed##
                 self.health=False 
                 self.kill()
 
@@ -395,6 +426,7 @@ class Enemies(pygame.sprite.Sprite):
         self.vision.center=(self.rect.centerx+0.5*self.rect.size[0]*-self.direction,self.rect.centery)
 
     def handle_collisions(self, collideable_terrain, CELL_SIZE, GRID_SIZE, WORLD_SIZE):
+        ##handling collisions with terrain##
         for tile in collideable_terrain:
             if self.rect.colliderect(tile.rect):  
                 if self.moving_right:
@@ -411,6 +443,7 @@ class Enemies(pygame.sprite.Sprite):
             self.rect.y-=self.dy   
 
     def shoot(self,attack_group):
+        ##instance of attack is created when condition is met##
         attack = Attack(self,self.attack_type, self.rect.centerx + 1.1*self.rect.width * -self.direction, self.rect.centery, -self.direction)
         attack_group.add(attack)
 
@@ -431,6 +464,7 @@ class Enemies(pygame.sprite.Sprite):
             self.action=self.action
     
     def update_animation(self):
+        ##frames are updated for enemy and restrted##
         ANIMATION_COOLDOWN=150
         if pygame.time.get_ticks()-self.update_time>ANIMATION_COOLDOWN:
             self.update_time=pygame.time.get_ticks()
@@ -453,6 +487,7 @@ class Enemies(pygame.sprite.Sprite):
 class Attack(pygame.sprite.Sprite):
     def __init__(self, owner,attack_type,x,y,direction):
         pygame.sprite.Sprite.__init__(self)
+        ##attcak class initialised##
         self.owner=owner
         self.image=pygame.image.load(f'{attack_type}.png').convert_alpha()
         self.speed=3
@@ -471,11 +506,13 @@ class Attack(pygame.sprite.Sprite):
             self.kill()
             self.remove(attack_group)  
         if pygame.sprite.spritecollide(player,attack_group,False):
+            ##dealing damage to player##
             if player.health:
                 player.hp-=self.owner.damage
                 self.kill()
                 self.remove(attack_group)
         for enemy in enemy_group:
+            ##checking if enemy is being attacked##
             if pygame.sprite.spritecollide(enemy,attack_group,False):
                 if enemy.health:
                     enemy.hp-=20

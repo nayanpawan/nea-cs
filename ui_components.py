@@ -1,5 +1,6 @@
 import pygame
 class Button():
+    ##button class initialisation##
     def __init__(self, image, pos, hov_image):
         self.base_image=pygame.image.load(image)
         self.hov_image=pygame.image.load(hov_image)
@@ -10,20 +11,24 @@ class Button():
 
 
     def update(self, screen):
+        ##draw on screen##
         screen.blit(self.image, self.rect)
 
     def check_input(self, mouse_position):
+        ##checks if mousebutton down if button was pressed##
         if mouse_position[0] in range(self.rect.left, self.rect.right) and mouse_position[1] in range(self.rect.top, self.rect.bottom):
             return True
         return False
     
     def change_image(self, mouse_position):
+        ##changes the image of button if user hovering over it##
         if mouse_position[0] in range(self.rect.left, self.rect.right) and mouse_position[1] in range(self.rect.top, self.rect.bottom):
             self.image=self.hov_image
         else:
             self.image=self.base_image
 
 class Textbox():
+    ##textbox class initialisation##
     def __init__(self, width, height, pos, placeholder_text):
         self.x=pos[0]
         self.y=pos[1]
@@ -34,18 +39,19 @@ class Textbox():
         self.inactive_colour=(128, 128, 128)
         self.colour=self.inactive_colour
         self.active=False
+        ##placeholder text for when it sis inactive##
         self.placeholder_text=placeholder_text
         self.text=''
         self.show_placeholder=True
-        self.placeholder_colour=(192, 192, 192)
+        self.placeholder_colour=(255, 150, 230)
 
     def draw(self, screen):
         if self.text=='':
-            display_text= self.placeholder_text
-            text_surface=self.font.render(display_text, True, self.placeholder_colour)
+            ##if nothing typed placeholder text shown##
+            text_surface=self.font.render(self.placeholder_text, True, self.placeholder_colour)
         else:
-            display_text=self.text
-            text_surface=self.font.render(display_text, True, self.text_colour)
+            ##otherwise enetred text shown##
+            text_surface=self.font.render(self.text, True, self.text_colour)
         pygame.draw.rect(screen, self.colour, self.rect, 2)  
         screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5))  
 
@@ -65,6 +71,7 @@ class Textbox():
                 self.colour=self.inactive_colour
 
         if event.type==pygame.KEYDOWN and self.active:
+            ##backspace to delete text##
             if (event.key==pygame.K_BACKSPACE) and self.text:
                 self.text=self.text[:-1]
             elif not (event.key==pygame.K_BACKSPACE):
@@ -72,7 +79,8 @@ class Textbox():
         
 
     def get_text(self):
+        ##retrive data entered##
         input=self.text
-        self.text=self.placeholder_text
+        self.text=''
         return input
         

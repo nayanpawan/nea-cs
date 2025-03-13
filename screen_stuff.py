@@ -10,6 +10,7 @@ GRID_SIZE = 60
 CELL_SIZE = WIDTH // GRID_SIZE
 
 def generate_dungeon(level):
+        ##each chunk is procedurally generated using perlin noise##
         seed=random.randint(0,10000)
         noise1=PerlinNoise(2,seed)
         noise2=PerlinNoise(4,seed)
@@ -39,9 +40,11 @@ def generate_dungeon(level):
                 elif tile<-0.2 and tile>-0.4 or tile>0.6:
                     row.append(1)#stone   
             dungeon.append(row) 
-        return dungeon 
+        return dungeon ##stored as a 2d list##
 
 def generate_world(world,level):
+        world.clear()
+        ##world is certain chunkxchunk##
         for y in range(WORLD_SIZE):
             row=[]
             for x in range(WORLD_SIZE):
@@ -51,6 +54,7 @@ def generate_world(world,level):
     
     
 def draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain,consumable_group):
+        ##drawing world and ading blocks to appopirted groups##
         for b in range(WORLD_SIZE):
             for a in range(WORLD_SIZE):
                 dungeon=world[a][b]
@@ -67,6 +71,7 @@ def draw_dungeon(world,all_terrain_group,all_sprites,collideable_terrain,consuma
 
 
 def random_spawn(world):
+        ##randomly spawning player somehwre in the world on grass##
         spawn_x, spawn_y = None, None
         a=random.randint(0,1)
         b=random.randint(0,1)
@@ -87,6 +92,7 @@ def random_spawn(world):
         return spawn_x, spawn_y   
 
 def enemy_random_spawn(num_enemies,enemy_type,collideable_terrain,enemy_group,all_sprites):
+        ##scattering enemies throughout the owrld##
         for i in range(0,num_enemies+3):
             spawn_x, spawn_y = None, None
             a=random.randint(0,1)
@@ -103,6 +109,7 @@ def enemy_random_spawn(num_enemies,enemy_type,collideable_terrain,enemy_group,al
                 spawn_y = y * CELL_SIZE+chunk_y_offset
                 enemy=Enemies(enemy_type,spawn_x, spawn_y)
                 collision = False  
+                ##preventing from spawing on rocks and water##
                 for block in collideable_terrain:
                     if enemy.rect.colliderect(block.rect) or block.cell==3 :
                         collision = True 
@@ -116,7 +123,8 @@ def enemy_random_spawn(num_enemies,enemy_type,collideable_terrain,enemy_group,al
                     enemy.kill() 
 
 def boss_random_spawn(level,enemy_type,collideable_terrain,enemy_group,all_sprites):
-        for i in range(0,level/10):
+        ##randomly spawing the boss somehwre in the owrld very 10th level##
+        for i in range(0,int(level/10)):
             spawn_x, spawn_y = None, None
             a=random.randint(0,1)
             b=random.randint(0,1)
@@ -155,3 +163,61 @@ def draw_hungerbar(SCREEN,player):
         pygame.draw.rect(SCREEN,(0,0,0),(10, 60, 300, 40))
         pygame.draw.rect(SCREEN,(211,211,211),(10, 60, 295, 35))
         pygame.draw.rect(SCREEN,(128,84,47),(10, 60, ratio*295, 35))   
+
+def draw_haki_counter(SCREEN,player):
+        current_time = pygame.time.get_ticks()
+        time_since_haki = current_time - player.last_haki_time
+        
+        if time_since_haki < player.haki_cooldown:
+            ratio = time_since_haki / player.haki_cooldown
+        else:
+            ratio = 1
+        pygame.draw.rect(SCREEN,(0,0,0),(10, 110, 300, 7))
+        pygame.draw.rect(SCREEN,(211,211,211),(10, 110, 297, 5))
+        pygame.draw.rect(SCREEN,(255,0,0),(10, 110, ratio*297, 5))          
+
+def draw_score(SCREEN, bounty,font,highscore):
+    text_surface_1 = font.render(f"P.B.: ${highscore}", True, (255,165,0))   
+    text_rect_1 = text_surface_1.get_rect(topright=(WIDTH-10 , 10))
+    SCREEN.blit(text_surface_1, text_rect_1)
+
+    text_surface_2 = font.render(f"BOUNTY: ${bounty}", True, (255,165,0))   
+    text_rect_2 = text_surface_2.get_rect(topright=(WIDTH-10 , 60))
+    SCREEN.blit(text_surface_2, text_rect_2)
+
+def error_message(SCREEN,font,result):
+        ##all the error  message for register##
+        if result==1:
+            message='Missing Fields'
+        elif result==2:
+            message='Username Taken' 
+        elif result==3:
+            message='Username has to be atleast 5 characters'
+        elif result==4:
+            message='Password has to be atleast 5 characters'  
+        elif result==5:
+            message='Password must contain atleast 1 number'  
+        elif result==6:
+            message='Password must contain upper and lowercase' 
+        elif result==7:
+            message='Username and Password do not match'
+        elif result==8:
+            message='Key bind is set for another key'              
+        text_surface = font.render(message, True, (255,0,0))   
+        text_rect = text_surface.get_rect(midtop=(WIDTH//2 , 200))
+        SCREEN.blit(text_surface, text_rect)
+        pygame.display.update()
+
+def sort_score(highscores:list,score):
+    ##insertion sort to sort scores in descing order##
+    ## and poping 6th highscore so only 5 kept##
+    highscores.append(score)
+    for i in range (1,len(highscores)):
+        check=highscores[i]
+        pos=i
+        while pos>0 and highscores[pos-1]<check:
+            highscores[pos]=highscores[pos-1]
+            pos-=1
+        highscores[pos]=check
+    highscores.pop()
+    return highscores    

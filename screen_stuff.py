@@ -192,11 +192,11 @@ def error_message(SCREEN,font,result):
         elif result==2:
             message='Username Taken' 
         elif result==3:
-            message='Username has to be atleast 5 characters'
+            message='Username has to be at least 5 characters'
         elif result==4:
-            message='Password has to be atleast 5 characters'  
+            message='Password has to be at least 5 characters'  
         elif result==5:
-            message='Password must contain atleast 1 number'  
+            message='Password must contain at least 1 number'  
         elif result==6:
             message='Password must contain upper and lowercase' 
         elif result==7:

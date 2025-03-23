@@ -3,6 +3,7 @@ class Button():
     ##button class initialisation##
     def __init__(self, image, pos, hov_image):
         self.base_image=pygame.image.load(image)
+        ##image shown when hovering##
         self.hov_image=pygame.image.load(hov_image)
         self.image=self.base_image
         self.x=pos[0]
@@ -16,13 +17,17 @@ class Button():
 
     def check_input(self, mouse_position):
         ##checks if mousebutton down if button was pressed##
-        if mouse_position[0] in range(self.rect.left, self.rect.right) and mouse_position[1] in range(self.rect.top, self.rect.bottom):
+        ##this is used to extract textbox#
+        #  if this condition is met textbox extracted##
+        if mouse_position[0] in range(self.rect.left, self.rect.right) \
+            and mouse_position[1] in range(self.rect.top, self.rect.bottom):
             return True
         return False
     
     def change_image(self, mouse_position):
         ##changes the image of button if user hovering over it##
-        if mouse_position[0] in range(self.rect.left, self.rect.right) and mouse_position[1] in range(self.rect.top, self.rect.bottom):
+        if mouse_position[0] in range(self.rect.left, self.rect.right) \
+            and mouse_position[1] in range(self.rect.top, self.rect.bottom):
             self.image=self.hov_image
         else:
             self.image=self.base_image
@@ -43,12 +48,13 @@ class Textbox():
         self.placeholder_text=placeholder_text
         self.text=''
         self.show_placeholder=True
-        self.placeholder_colour=(255, 150, 230)
+        self.placeholder_colour=(200, 200, 200)
 
     def draw(self, screen):
         if self.text=='':
             ##if nothing typed placeholder text shown##
-            text_surface=self.font.render(self.placeholder_text, True, self.placeholder_colour)
+            text_surface=self.font.render(self.placeholder_text,\
+                                           True, self.placeholder_colour)
         else:
             ##otherwise enetred text shown##
             text_surface=self.font.render(self.text, True, self.text_colour)

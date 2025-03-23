@@ -7,26 +7,26 @@ from screen_stuff import*
 from sqlite import*
 
 
-
-pygame.init()
 pygame.mixer.init()
+pygame.init()
+
 
 from ui_components import Button, Textbox
 
 WIDTH, HEIGHT= 1080, 600
 SCREEN=pygame.display.set_mode((WIDTH, HEIGHT))
 
-font = pygame.font.Font(None, 36)
-
 FPS=60
 clock=pygame.time.Clock()
 
 keybinds=['W','A','S','D','K']
+font = pygame.font.Font(None, 36)
+
 
 
 
 def main_menu():
-    
+
     pygame.display.set_caption('Main menu')
     BG=pygame.image.load("bgs/main-menu-bg.png").convert_alpha()
     BG = pygame.transform.scale(BG, (WIDTH, HEIGHT))
@@ -37,10 +37,11 @@ def main_menu():
     title_rect.midtop = (WIDTH // 2, 10) 
 
     ##buttons##
-    sign_in_button=Button('buttons/signIn.png',(540,350),'buttons/hover_signIn.png')
-    register_button=Button('buttons/register.png',(540,450),'buttons/register-hover.png')
+    sign_in_button=Button('buttons/signIn.png',(540,350),\
+                          'buttons/hover_signIn.png')
+    register_button=Button('buttons/register.png',(540,450),\
+                           'buttons/register-hover.png')
         
-
     while True:
         SCREEN.blit(BG,(0,0))
         SCREEN.blit(title, title_rect.topleft)
@@ -56,7 +57,8 @@ def main_menu():
                 pygame.quit()
                 sys.exit()
             if event.type==pygame.MOUSEBUTTONDOWN:
-                ##checking for button input and redirecting to appropirate window##
+                ##checking for button input and#
+                #  redirecting to appropirate window##
                 if sign_in_button.check_input(mouse_pos):
                     sign_in_menu()
                 elif register_button.check_input(mouse_pos):
@@ -530,7 +532,7 @@ def game():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 paused = True
             elif event.type == pygame.KEYDOWN and event.key==pygame.K_h:
-                player.haki_attack(enemy_group)  
+                player.haki_attack(enemy_group, level)  
             elif event.type == pygame.KEYDOWN and event.key==pygame.K_m:
                 music_pause=not music_pause
 ##music pause ability##
@@ -575,7 +577,7 @@ def game():
             player.update_animation() 
             for attack in attack_group:
                 ##attack animation##
-                attack.update(player,enemy_group,attack_group)
+                attack.update(player,enemy_group,attack_group,level)
             
             ##handles player movemnt##
             player.movement(events, collideable_terrain,all_terrain_group, CELL_SIZE, GRID_SIZE, WORLD_SIZE,keybinds)

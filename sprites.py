@@ -172,9 +172,10 @@ class Player(pygame.sprite.Sprite):
             self.speed = pygame.math.Vector2(4)   
             self.water_damage_timer = 0                  
        
-    def haki_attack(self, enemy_group):
+    def haki_attack(self, enemy_group,level):
         ##haki attack with a cooldown##
         current_time = pygame.time.get_ticks()
+        self.haki_cooldown=max(5000,self.haki_cooldown - (level * 5))
         if current_time - self.last_haki_time >= self.haki_cooldown:
             for enemy in enemy_group:
                 if abs(enemy.rect.x - self.rect.x) < 500 and abs(enemy.rect.y - self.rect.y) < 500:
@@ -499,7 +500,7 @@ class Attack(pygame.sprite.Sprite):
         if self.direction==1:
             self.flip=True
 
-    def update(self,player,enemy_group,attack_group):
+    def update(self,player,enemy_group,attack_group,level):
 
         self.rect.x+=(self.direction*self.speed)  
         if self.rect.x-self.start_x>150 or self.start_x-self.rect.x>150:
@@ -515,7 +516,7 @@ class Attack(pygame.sprite.Sprite):
             ##checking if enemy is being attacked##
             if pygame.sprite.spritecollide(enemy,attack_group,False):
                 if enemy.health:
-                    enemy.hp-=20
+                    enemy.hp-=(20+level*2)
                     self.kill()
                     self.remove(attack_group)     
 
